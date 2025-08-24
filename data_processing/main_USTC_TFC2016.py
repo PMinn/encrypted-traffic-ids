@@ -1,5 +1,6 @@
 import glob
 from multiprocessing import Pool
+from steps.datasetProcessor_USTC_TFC2016 import preprocess_data_del
 from steps.split_USTC_TFC2016 import split_files
 from steps.getFeatures_USTC_TFC2016 import runTCP_del, runUDP_del
 
@@ -25,4 +26,7 @@ if __name__ == "__main__":
     # UDP
     # with Pool(10) as p:
     #     p.map(runUDP_del, ['Benign', 'Malware'])
+
+    # 3. 數據預處理，合併特徵並分割訓練集與測試集
+    # preprocess_data_del()
     pass
