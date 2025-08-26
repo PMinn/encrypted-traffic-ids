@@ -131,7 +131,7 @@ class Sampling_Binary(Sampling):
         print(f'save to: {self.save_to}')
 
 
-def run_sampling(classes, DATA_PATH, MULTI_PATH, UNDERSAMPLING, OVERSAMPLING):
+def run_sampling(classes, DATA_PATH, MULTI_PATH, UNDERSAMPLING, OVERSAMPLING, isTestingData = False):
     if len(classes) < 2:
         raise ValueError("Classes list must contain at least two classes for sampling.")
 
@@ -147,15 +147,16 @@ def run_sampling(classes, DATA_PATH, MULTI_PATH, UNDERSAMPLING, OVERSAMPLING):
     sampling = Sampling(classes, DATA_PATH, MULTI_PATH)
     # load data
     data, label = sampling.load_data()
-    # #########################  Oversampling ##############################################
-    data, label = sampling.get_oversampling(data, label, OVERSAMPLING, k = 3, cluster_balance_threshold = 0.005)
-    # #########################  Undersampling #############################################
-    data, label = sampling.get_undersampling(data, label, under_strategy = UNDERSAMPLING)
+    if not isTestingData:
+        #########################  Oversampling ##############################################
+        data, label = sampling.get_oversampling(data, label, OVERSAMPLING, k = 3, cluster_balance_threshold = 0.005)
+        # #########################  Undersampling #############################################
+        data, label = sampling.get_undersampling(data, label, under_strategy = UNDERSAMPLING)
 
     sampling.save_np(data, label)
     del data, label
 
-def run_binary_sampling(classes, DATA_PATH, BINARY_PATH, UNDERSAMPLING, OVERSAMPLING):
+def run_binary_sampling(classes, DATA_PATH, BINARY_PATH, UNDERSAMPLING, OVERSAMPLING, isTestingData = False):
     if len(classes) < 2:
         raise ValueError("Classes list must contain at least two classes for binary sampling.")
     
@@ -171,10 +172,11 @@ def run_binary_sampling(classes, DATA_PATH, BINARY_PATH, UNDERSAMPLING, OVERSAMP
     sampling = Sampling_Binary(classes, DATA_PATH, BINARY_PATH)
     # load data
     data, label = sampling.load_data()
-    # #########################  Oversampling ##############################################
-    data, label = sampling.get_oversampling(data, label, OVERSAMPLING, k = 3, cluster_balance_threshold = 0.005)
-    # #########################  Undersampling #############################################
-    data, label = sampling.get_undersampling(data, label, under_strategy = UNDERSAMPLING)
+    if not isTestingData:
+        # #########################  Oversampling ##############################################
+        data, label = sampling.get_oversampling(data, label, OVERSAMPLING, k = 3, cluster_balance_threshold = 0.005)
+        # #########################  Undersampling #############################################
+        data, label = sampling.get_undersampling(data, label, under_strategy = UNDERSAMPLING)
 
     sampling.save_np(data, label)
     del data, label

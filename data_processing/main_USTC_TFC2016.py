@@ -51,46 +51,54 @@ if __name__ == "__main__":
     # ).run()
     
     # 4. 不平衡資料處理
+    UNDERSAMPLING = { 
+        'benign': 4000*15,
+        "Cridex": 4000*3, 
+        "Neris": 4000*3, 
+        "Virut": 4000*4,
+    }
+    OVERSAMPLING = {
+        "Geodo": 8000,
+        "Htbot": 8000,
+        "Miuref": 7000,
+        "Nsis-ay": 7500,
+        "Shifu": 9500,
+        "Tinba": 9000,
+        "Zeus": 10000
+    }
     # 多分類
     # run_sampling(
     #     classes = classes,
     #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/train',
     #     MULTI_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/sampling',
-    #     UNDERSAMPLING = { 
-    #         'benign': 4000*15,
-    #         "Cridex": 4000*3, 
-    #         "Neris": 4000*3, 
-    #         "Virut": 4000*4,
-    #     },
-    #     OVERSAMPLING = {
-    #         "Geodo": 8000,
-    #         "Htbot": 8000,
-    #         "Miuref": 7000,
-    #         "Nsis-ay": 7500,
-    #         "Shifu": 9500,
-    #         "Tinba": 9000,
-    #         "Zeus": 10000
-    #     }
+    #     UNDERSAMPLING = UNDERSAMPLING,
+    #     OVERSAMPLING = OVERSAMPLING,
+    #     isTestingData = False
+    # )
+    # 產生 testing 資料 (不須 testing 的話可以不用跑)
+    # run_sampling(
+    #     classes = classes,
+    #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test',
+    #     MULTI_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test/sampling',
+    #     OVERSAMPLING = OVERSAMPLING,
+    #     isTestingData = True
     # )
     # 二分類
     # run_binary_sampling(
     #     classes = classes,
     #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/train',
     #     BINARY_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/binary_sampling',
-    #     UNDERSAMPLING = { 
-    #         'benign': 4000*15,
-    #         "Cridex": 4000*3, 
-    #         "Neris": 4000*3, 
-    #         "Virut": 4000*4,
-    #     },
-    #     OVERSAMPLING = {
-    #         "Geodo": 8000,
-    #         "Htbot": 8000,
-    #         "Miuref": 7000,
-    #         "Nsis-ay": 7500,
-    #         "Shifu": 9500,
-    #         "Tinba": 9000,
-    #         "Zeus": 10000
-    #     }
+    #     UNDERSAMPLING = UNDERSAMPLING,
+    #     OVERSAMPLING = OVERSAMPLING,
+    #     isTestingData = False
+    # )
+    # 產生二分類資料 (不須 testing 的話可以不用跑)
+    # run_binary_sampling(
+    #     classes = classes,
+    #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test',
+    #     BINARY_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test/binary_sampling',
+    #     UNDERSAMPLING = UNDERSAMPLING,
+    #     OVERSAMPLING = OVERSAMPLING,
+    #     isTestingData = True
     # )
     pass
