@@ -167,7 +167,7 @@ class DatasetProcesser():
         for index, classType in enumerate(self.classes):
             print(f'{classType} total: {test_count[index]}')
 
-class DatasetProcesser2(DatasetProcesser):
+class DatasetProcesser_USTC_TFC2016(DatasetProcesser):
     def __init__(self, data_path, save_to, classes):
         super().__init__(data_path, save_to, classes)
 
@@ -219,15 +219,3 @@ class DatasetProcesser2(DatasetProcesser):
         print('*'*15+' test size '+'*'*15)
         for index, classType in enumerate(self.classes):
             print(f'{classType} total: {test_count[index]}')
-
-def  preprocess_data_del():
-
-    classes = [
-        'benign',
-        'malware'
-    ]
-
-    ORIG_DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/del_120_5_flows(delall)/'
-    DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delallpmd'
-
-    DatasetProcesser2(ORIG_DATA_PATH, DATA_PATH, classes).run()

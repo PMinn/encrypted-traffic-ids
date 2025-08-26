@@ -4,11 +4,8 @@ import glob
 from datetime import datetime, timezone, timedelta
 import os
 from tqdm import tqdm
-import logging
-import sys
 
-class Get_IDS2019(): # Interface
-    DATE={'0112':'SAT-01-12-2018', '0311':'SAT-03-11-2018'}
+class Get_IDS2016(): # Interface
     def __init__(self, paths, traffic_type, packet_shape, classType, save_to = None):
         self.paths = paths
         self.save_to = save_to
@@ -89,7 +86,7 @@ class Get_IDS2019(): # Interface
     def preprocess_flow(self, pkts):
         pass
 
-    def get_label(self, date_id, pkts, m_2_list, start_end_time, grey_area_time):
+    def get_label(self, pkts, m_2_list, start_end_time, grey_area_time, filePath, attack_class):
         # get information of the first packet
         src_ip = pkts[0].payload.src
         src_port = pkts[0].payload.payload.sport
@@ -104,16 +101,10 @@ class Get_IDS2019(): # Interface
         # print("arr_time:",arr_time)
         # categorize flows to benign and malicious
         label = 0  # default
-        if date_id == "0311":
-            for i, t in enumerate(grey_area_time):
-                if (t[0] <= arr_time <= t[1]): 
-                    label = -1
-            for i, t in enumerate(start_end_time):
-                if ((m_2_list == pkt_ip_tuple).all(1).any()):
-                    if (t[0] <= arr_time <= t[1]):   
-                        label = i+1
-                        break
-     
+        for index, ac in enumerate(attack_class):
+            if filePath.split('/')[-1].startswith(ac):
+                return index + 1
+
         return label
 
     def get_used_pkt(self, pkts):
@@ -129,7 +120,9 @@ class Get_IDS2019(): # Interface
         m_2_list = None
 
         # get attack time
-        start_end_time, grey_area_time, attack_class = [], [], ["malware"]
+        start_end_time = []
+        grey_area_time = []
+        attack_class = ["Cridex", "Geodo", "Htbot", "Miuref", "Neris", "Nsis-ay", "Shifu", "Tinba", "Virut", "Zeus"]
 
         # read pcap dirs
         dirs = self.paths
@@ -154,7 +147,7 @@ class Get_IDS2019(): # Interface
                     # check for skip tcp connection in packet
                     if self.TRAFFIC_TYPE == 'TCP' and len(pkts) < 4:
                         continue
-                    label = 1
+                    label = self.get_label(pkts, m_2_list, start_end_time, grey_area_time, f, attack_class)
                     if label >= 0:
                         label_count[label]+=1
                         # if(label==4):
@@ -191,7 +184,7 @@ class Get_IDS2019(): # Interface
         print(label_count)
         self.save_np_files(b_flows, m_flows, attack_class)
 
-class Get_IDS2019_del(Get_IDS2019): #delete IP, Mac, Port
+class Get_IDS2016_del(Get_IDS2016): #delete IP, Mac, Port
     def __init__(self, paths, traffic_type, packet_shape, classType, save_to = None, version = "victim"):
         if save_to == None:
             raise ValueError("save_to directory must be specified")
@@ -227,7 +220,7 @@ class Get_IDS2019_del(Get_IDS2019): #delete IP, Mac, Port
 def runTCP_del(classType):
     traffic_type = 'TCP'
     packet_shape = (120, 5)
-    Get_IDS2019_del(
+    Get_IDS2016_del(
         paths = glob.glob(f'/sdc1/ytlindata/USTC-TFC2016/split/{classType}/split_*/*{traffic_type}*'),
         traffic_type = traffic_type,
         packet_shape = packet_shape,
@@ -238,7 +231,7 @@ def runTCP_del(classType):
 def runUDP_del(classType):
     traffic_type = 'UDP'
     packet_shape = (120, 5)
-    Get_IDS2019_del(
+    Get_IDS2016_del(
         paths = glob.glob(f'/sdc1/ytlindata/USTC-TFC2016/split/{classType}/split_*/*{traffic_type}*'),
         traffic_type = traffic_type,
         packet_shape = packet_shape,
