@@ -4,7 +4,6 @@ import glob
 import os
 from tqdm import tqdm
 
-
 class DatasetProcesser():
     def __init__(self, data_path, save_to, classes):
         self.data_path = data_path
@@ -75,7 +74,7 @@ class DatasetProcesser():
                     continue
                 old_data = self.concat(old_data, data)
             except Exception as e:
-                print(f'[Warning] Failed to load {d}: {e}')
+                print(f'[Warning] Failed to load {file}: {e}')
                 continue
             total_size = data.shape[0]
             sample_size = int(total_size * ratio)
@@ -166,6 +165,8 @@ class DatasetProcesser():
         print('*'*15+' test size '+'*'*15)
         for index, classType in enumerate(self.classes):
             print(f'{classType} total: {test_count[index]}')
+
+
 
 class DatasetProcesser_USTC_TFC2016(DatasetProcesser):
     def __init__(self, data_path, save_to, classes):

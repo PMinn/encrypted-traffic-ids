@@ -3,7 +3,7 @@ from multiprocessing import Pool
 from steps.split_USTC_TFC2016 import split_files
 from steps.getFeatures_USTC_TFC2016 import runTCP_del, runUDP_del
 from steps.datasetProcessor_USTC_TFC2016 import DatasetProcesser_USTC_TFC2016
-import steps.sampling_USTC_TFC2016 as run_sampling, run_binary_sampling
+from steps.sampling_USTC_TFC2016 import run_sampling, run_binary_sampling
 
 if __name__ == "__main__":
     # 攻擊類別
