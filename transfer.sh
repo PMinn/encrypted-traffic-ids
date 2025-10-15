@@ -1,0 +1,1 @@
+scp -r "D:\IDS datasets\TON_IoT\Network_dataset_pcaps\Network_dataset_pcaps" hsng@140.123.230.34:/sdc1/ytlindata/TON_IoT

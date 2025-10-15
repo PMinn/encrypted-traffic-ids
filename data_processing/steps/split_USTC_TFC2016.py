@@ -20,9 +20,13 @@ def split_files(input_dir, output_dir, max_files = 50, splitCapPath = "SplitCap.
 
     # 取得符合條件的檔案清單
     files = sorted(glob.glob(os.path.join(input_dir, "**")))
+    
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok = True)
 
     # 迴圈處理所有檔案
     for file in files:
+        print(f"Starting to process file: {file}")
         # 執行 SplitCap 並指定輸出資料夾
         out_dir = os.path.join(output_dir, f"split_{folder_num}")
 

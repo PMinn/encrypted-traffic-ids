@@ -4,6 +4,8 @@ import glob
 from datetime import datetime, timezone, timedelta
 import os
 from tqdm import tqdm
+# Load the TLS layer (requires scapy-ssl_tls extension)
+load_layer("tls")
 
 class Get_IDS2016(): # Interface
     def __init__(self, paths, traffic_type, packet_shape, classType, save_to = None):
@@ -140,7 +142,7 @@ class Get_IDS2016(): # Interface
                 # print(f"{d}/*{self.TRAFFIC_TYPE}*")
                 for f in files:
                     try:
-                        pkts = rdpcap(f, count=(self.IMG_SHAPE[1] + 3))
+                        pkts = rdpcap(f, count=(self.IMG_SHAPE[1] + 3), filter="tls")
                     except (Scapy_Exception, EOFError):
                         continue
 
@@ -168,7 +170,7 @@ class Get_IDS2016(): # Interface
                 # print("else")
                 for f in files:
                     try:
-                        pkts = rdpcap(f, count=(self.IMG_SHAPE[1] + 3))
+                        pkts = rdpcap(f, count=(self.IMG_SHAPE[1] + 3), filter="tls")
                     except (Scapy_Exception, EOFError):
                         continue
 
