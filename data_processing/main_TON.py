@@ -102,19 +102,24 @@ def filter_encrypted_pcaps():
             r = list(tqdm(pool.imap(mf, malicious_pcaps), total=len(malicious_pcaps)))
         print(f"Finished processing folder: {folder_name}")
         
-def count_pcaps():
+def count_pcaps(path):
     # 正常流量 Benign
-    benign_pcaps = glob.glob(os.path.join('/sdc1/ytlindata/TON_IoT/encrypted_filter/Benign/**', "*.pcap"), recursive = True)
-    print(f"Benign pcaps: {len(benign_pcaps)}")
+    benign_pcaps = glob.glob(os.path.join(f'{path}/Benign/**', "*.pcap"), recursive = True)
+    logger.info(f"Benign pcaps: {len(benign_pcaps)}")
+    logger.info(f"-----------------------------------")
     # 惡意流量 Malicious
-    malicious_folders = glob.glob('/sdc1/ytlindata/TON_IoT/encrypted_filter/Malicious/*')
+    malicious_folders = glob.glob(f'{path}/Malicious/*')
+    malicious_folders.sort()
     total_malicious_pcaps = 0
     for malicious_folder in malicious_folders:
         folder_name = malicious_folder.split('/')[-1]
         malicious_pcaps = glob.glob(os.path.join(malicious_folder, "**", "*.pcap"), recursive = True)
-        print(f"{folder_name} pcaps: {len(malicious_pcaps)}")
+        logger.info(f"{folder_name} pcaps: {len(malicious_pcaps)}")
         total_malicious_pcaps += len(malicious_pcaps)
-    print(f"Total Malicious pcaps: {total_malicious_pcaps}")
+    logger.info(f"-----------------------------------")
+    logger.info(f"Total Malicious pcaps: {total_malicious_pcaps}")
+    logger.info(f"Average Malicious pcaps per type: {total_malicious_pcaps / len(malicious_folders)}")
+    
 
 def filter_attack():
     # CSVs 裡面有紀錄每個 pcap 的攻擊類型
@@ -151,18 +156,28 @@ def filter_attack():
         "xss": "normal_XSS",
         "dos": "normal_DoS",
         "injection": "Injection_normal",
-        "runsomware": "normal_runsomware",
+        "ransomware": "normal_runsomware",
         "backdoor": "normal_backdoor",
         "mitm": "MITM_normal",
     }
+    skip_attack_types = [
+        "scanning",
+        "ddos",
+        "password",
+        "xss",
+        "dos",
+        "injection"
+    ]
     for attack_type in attack_dict:
+        if attack_type in skip_attack_types:
+            continue
         pcap_folder = csv_type2pcap_filder_map[attack_type]
         attack_pcaps = glob.glob(os.path.join(f'/sdc1/ytlindata/TON_IoT/encrypted_filter/Malicious/{pcap_folder}/**', "*.pcap"), recursive=True)
-        args = [(attack_dict[attack_type], pcap) for pcap in attack_pcaps]
-        with Pool(50) as pool:
-            r = list(tqdm(pool.imap(fa, args), total=len(args)))
-        # for pcap in tqdm(attack_pcaps):
-        #     fa((attack_dict[attack_type], pcap))
+        # args = [(attack_dict[attack_type], pcap) for pcap in attack_pcaps]
+        # with Pool(50) as pool:
+        #     r = list(tqdm(pool.imap(fa, args), total=len(args)))
+        for pcap in tqdm(attack_pcaps):
+            fa((attack_dict[attack_type], pcap))
 
 def main():
     # 有些 pcap 切分工具無法讀取，可以用這個步驟重新存檔一次
@@ -172,24 +187,25 @@ def main():
     # 篩選出加密的 pcap
     # filter_encrypted_pcaps()
     # 計算出各類型的數量
-    # count_pcaps()
+    # count_pcaps('/sdc1/ytlindata/TON_IoT/encrypted_filter)
     # 篩選攻擊
-    filter_attack()
-
+    # filter_attack()
+    # 計算出各類型的數量
+    # count_pcaps('/sdc1/ytlindata/TON_IoT/attack_filter')
+    # 2. 特徵擷取
+    # TCP
+    with Pool(10) as p:
+        p.map(runTCP_del, ['Benign', 'Malware'])
+    # UDP
+    with Pool(10) as p:
+        p.map(runUDP_del, ['Benign', 'Malware'])
+    
 if __name__ == "__main__":
-    file_handler = logging.FileHandler('./log/TON_attack_filter.log')
+    file_handler = logging.FileHandler('./log/TON_attack_filter_counting.log')
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)
     main()
-    # 2. 特徵擷取
-    # TCP
-    # with Pool(10) as p:
-    #     p.map(runTCP_del, ['Benign', 'Malware'])
-    # UDP
-    # with Pool(10) as p:
-    #     p.map(runUDP_del, ['Benign', 'Malware'])
-
     # 3. 數據預處理，合併特徵並分割訓練集與測試集
     # DatasetProcesser_USTC_TFC2016(
     #     ORIG_DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/del_120_5_flows(delall)/',
