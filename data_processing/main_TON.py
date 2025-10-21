@@ -1,8 +1,8 @@
 import glob
 from multiprocessing import Pool
 import os
-from steps.split_USTC_TFC2016 import split_files
-from steps.getFeatures_USTC_TFC2016 import runTCP_del, runUDP_del
+from utils.split_to_flows import split_files
+from steps.getFeatures_TON import runTCP_del, runUDP_del
 from steps.datasetProcessor_USTC_TFC2016 import DatasetProcesser_USTC_TFC2016
 from steps.sampling_USTC_TFC2016 import run_sampling, run_binary_sampling
 from utils.save_pcap import save_pcap
