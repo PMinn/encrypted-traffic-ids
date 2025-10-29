@@ -2,8 +2,8 @@ import glob
 from multiprocessing import Pool
 import os
 from utils.split_to_flows import split_files
-from steps.getFeatures_TON import runTCP_del, runUDP_del, run_del
-from steps.datasetProcessor_USTC_TFC2016 import DatasetProcesser_USTC_TFC2016
+from steps.getFeatures_TON import run_del
+from steps.datasetProcessor_TON import DatasetProcesser
 from steps.sampling_USTC_TFC2016 import run_sampling, run_binary_sampling
 from utils.save_pcap import save_pcap
 from steps.filter_encrypted_TON import df, mf
@@ -169,18 +169,23 @@ def filter_attack():
 def main():
     # 有些 pcap 切分工具無法讀取，可以用這個步驟重新存檔一次
     # rewrite_pcap()
+
     # 分離成 Flows
     # split_pcap()
+
     # 篩選出加密的 pcap
     # filter_encrypted_pcaps()
+
     # 計算出各類型的數量
     # count_pcaps('/sdc1/ytlindata/TON_IoT/encrypted_filter)
+
     # 篩選攻擊
     # filter_attack()
+
     # 計算出各類型的數量
     # count_pcaps('/sdc1/ytlindata/TON_IoT/attack_filter')
+
     # 特徵擷取
-    # 攻擊類別
     attack_class = [
         "Injection",
         "MITM",
@@ -192,20 +197,22 @@ def main():
         "XSS",
         "password"
     ]
-    run_del(attack_class)
+    # run_del(attack_class)
+
+    # 數據預處理，合併特徵並分割訓練集與測試集
+    classes = [*['benign'], *attack_class]
+    DatasetProcesser(
+        data_path = '/sdc1/ytlindata/TON_IoT/del_120_5_flows(delall)',
+        save_to = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall',
+        classes = classes
+    ).run()
     
 if __name__ == "__main__":
-    file_handler = logging.FileHandler('./log/TON_features.log')
+    file_handler = logging.FileHandler('./log/TON_processor.log')
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)
     main()
-    # 3. 數據預處理，合併特徵並分割訓練集與測試集
-    # DatasetProcesser_USTC_TFC2016(
-    #     ORIG_DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/del_120_5_flows(delall)/',
-    #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall',
-    #     classes = classes
-    # ).run()
     
     # 4. 不平衡資料處理
     UNDERSAMPLING = { 
