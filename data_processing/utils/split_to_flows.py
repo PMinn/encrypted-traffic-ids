@@ -53,5 +53,5 @@ def split_files(input_dir, output_dir, max_files = 50, splitCapPath = "SplitCap.
             print(f"Error occurred while processing {file}: {e}")
             return
 
-        # 增加檔案計數
-        counter += 1
+        # counter 設為 out_dir 中的檔案數量
+        counter = len(glob.glob(os.path.join(out_dir, "*")))
