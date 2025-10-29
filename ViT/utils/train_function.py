@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 from sklearn.metrics import f1_score, precision_score, recall_score
-
-
+import logging
+logger = logging.getLogger()
 
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3,4'
@@ -73,7 +73,7 @@ class Train_1D:
         self.val_loss_curve = []
 
 
-        print('process dataset....')
+        logger.info('process dataset....')
         self.train_loader,self.valid_loader,self.train_num,self.valid_num = self.input_train_data(self.data_path,self.label_path,self.BATCH_SIZE) #(15,12)=180
 
         self.train()
@@ -91,13 +91,13 @@ class Train_1D:
         data = data/255
 
         train_data, val_data, train_label, val_label = train_test_split(data,label, test_size=0.1, stratify=label, random_state=42)#分訓練/驗證
-        print('-' * 25 +'train data'+'-' * 25 )
+        logger.info('-' * 25 +'train data'+'-' * 25 )
         for i in set(train_label):
-            print(f'{self.classes[i]}: ',np.sum(train_label == i ))
+            logger.info(f'{self.classes[i]}: ',np.sum(train_label == i ))
 
-        print('-' * 25 +'valid data'+'-' * 25 )
+        logger.info('-' * 25 +'valid data'+'-' * 25 )
         for i in set(val_label):
-            print(f'{self.classes[i]}: ',np.sum(val_label == i ))
+            logger.info(f'{self.classes[i]}: ',np.sum(val_label == i ))
 
         train_loader = self.get_dataLoader(train_data,train_label,batch_size)
         val_loader = self.get_dataLoader(val_data,val_label,batch_size)
@@ -110,7 +110,7 @@ class Train_1D:
         lr = self.init_lr * (0.001 ** (epoch // 10))
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
-        print('learning rate:',lr )
+        logger.info('learning rate:',lr )
 
 #######################################################################  binary  #############################################################################
 
@@ -118,7 +118,7 @@ class Train_1D:
         val_total_correct = 0
         model = model.cuda(device=device)
         model.eval()
-        #print(torch.cuda.get_device_name())
+        #logger.info(torch.cuda.get_device_name())
         criterion = nn.CrossEntropyLoss()
 
         class_correct = list(0. for i in enumerate(self.classes))
@@ -133,17 +133,17 @@ class Train_1D:
             for inputs, labels in self.valid_loader:
                 inputs = inputs.cuda(device=device)
                 labels = labels.cuda(device=device)
-                #print(torch.cuda.get_device_name())
+                #logger.info(torch.cuda.get_device_name())
                 inputs = inputs.unsqueeze(1)
                 outputs, cls_token_features = model(inputs)
 
                 # val_loss = criterion(outputs, labels.long())
                 loss = criterion(outputs, labels.long())
-                # print(loss.item())
+                # logger.info(loss.item())
                 # val_loss += float(loss.item() * inputs.size(0))
                 val_loss += float(loss * inputs.size(0))
                 _, predicted = torch.max(outputs.data, 1)
-                # print('predicted:',predicted)
+                # logger.info('predicted:',predicted)
 
                 val_total_correct += (predicted == labels).sum().item()
                 c = (predicted == labels).squeeze()
@@ -172,19 +172,19 @@ class Train_1D:
                     except:
                         acc = 0
                     file.write(f'valid Accuracy of {c}: {str(acc)}% \n')
-                    print('valid Accuracy of %5s : %8.4f %%' % (c, acc))
+                    logger.info('valid Accuracy of %5s : %8.4f %%' % (c, acc))
 
                 val_acc = val_acc_add/len(self.classes)
                 # val_loss = val_loss.item() / self.valid_num
                 val_loss = val_loss / self.valid_num
                 file.write(f'Valid Accuracy:{str(val_acc)} | loss: {str(val_loss)} \n')
-                print(f'Valid Accuracy:{str(val_acc)}| loss:{str(val_loss)}| F1 Score: {f1:.4f}')
+                logger.info(f'Valid Accuracy:{str(val_acc)}| loss:{str(val_loss)}| F1 Score: {f1:.4f}')
 
         # 紀錄 val_loss
         self.val_loss_curve.append(val_loss)
         self.valL_loss.append(val_loss)
         if epoch % 5 == 0:
-            torch.save(model, './{}/pth/model-{:.2f}-val_acc-{}-epoch.pth'.format(self.subdir,val_acc,epoch))
+            torch.save(model, '{}/pth/model-{:.2f}-val_acc-{}-epoch.pth'.format(self.subdir,val_acc,epoch))
 
         if val_acc >= self.best_val_acc:
             self.best_val_acc = val_acc
@@ -192,7 +192,7 @@ class Train_1D:
             with open(self.subdir+'/Best_valid_Acc.txt', 'w') as file:
                 file.write('Best Epoch :'+str(epoch+1)+f'\n Best acc: {self.best_val_acc}')
 
-            torch.save(model, f'./{self.subdir}/pth/model-best_val_acc.pth')
+            torch.save(model, f'{self.subdir}/pth/model-best_val_acc.pth')
 #######################################################################  binary  #############################################################################
 
 
@@ -257,14 +257,14 @@ class Train_1D:
     #                     acc = 0
     #                 file.write(f'valid Accuracy of {c}: {acc:.2f}% \n')
     #                 file.write(f'Precision: {precision_per_class[i]:.4f} | Recall: {recall_per_class[i]:.4f} | F1 Score: {f1_per_class[i]:.4f}\n')
-    #                 # print(f'valid Accuracy of {c} : {acc:.2f}% | Precision: {precision_per_class[i]:.4f} | Recall: {recall_per_class[i]:.4f} | F1 Score: {f1_per_class[i]:.4f}')
-    #                 print(f'valid Accuracy of {c} : {acc:.2f}%')
+    #                 # logger.info(f'valid Accuracy of {c} : {acc:.2f}% | Precision: {precision_per_class[i]:.4f} | Recall: {recall_per_class[i]:.4f} | F1 Score: {f1_per_class[i]:.4f}')
+    #                 logger.info(f'valid Accuracy of {c} : {acc:.2f}%')
     #             val_acc = val_acc_add / len(self.classes)
     #             val_loss = val_loss / self.valid_num
     #             file.write(f'\nOverall Metrics: \n')
     #             file.write(f'Valid Accuracy: {val_acc:.4f} | Loss: {val_loss:.4f}\n')
     #             file.write(f'F1 Score: {overall_f1:.4f} | Precision: {overall_precision:.4f} | Recall: {overall_recall:.4f}\n')
-    #             print(f'Overall Metrics: Valid Accuracy: {val_acc:.4f} | Loss: {val_loss:.4f} | F1 Score: {overall_f1:.4f} | Precision: {overall_precision:.4f} | Recall: {overall_recall:.4f}')
+    #             logger.info(f'Overall Metrics: Valid Accuracy: {val_acc:.4f} | Loss: {val_loss:.4f} | F1 Score: {overall_f1:.4f} | Precision: {overall_precision:.4f} | Recall: {overall_recall:.4f}')
 
     #     self.valL_loss.append(val_loss)
     #     if epoch % 5 == 0:
@@ -283,7 +283,7 @@ class Train_1D:
         train_loss = list()
 
         model = self.model.cuda(device=device)
-        print(torch.cuda.get_device_name())
+        logger.info(torch.cuda.get_device_name())
         model = nn.DataParallel(model)
         # loss function
         criterion = nn.CrossEntropyLoss()
@@ -294,7 +294,7 @@ class Train_1D:
         # scheduler
         scheduler = StepLR(optimizer, step_size=self.RL_STEP, gamma=self.gamma)
 
-        print('start training ...')
+        logger.info('start training ...')
         for epoch in range(self.EPOCH):
 
             localtime = time.asctime( time.localtime(time.time()) )
@@ -309,22 +309,21 @@ class Train_1D:
             # 在每个批次的迭代中，更新学习率
             # adjust_lr(optimizer, epoch)
             scheduler.step()# 更新学习率
-            print("learning rate:", scheduler.get_last_lr())
+            logger.info("learning rate:", scheduler.get_last_lr())
 
-            print()
-            print('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch + 1,self.EPOCH,localtime))
-            print('-' * len('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch + 1,self.EPOCH,localtime)))
+            logger.info('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch + 1,self.EPOCH,localtime))
+            logger.info('-' * len('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch + 1,self.EPOCH,localtime)))
 
             for i, (inputs, labels) in enumerate(self.train_loader):#train
 
                 optimizer.zero_grad()  # clear gradients for this training step
                 inputs = inputs.cuda(device=device)
                 labels = labels.cuda(device=device)
-                #print(torch.cuda.get_device_name())
+                #logger.info(torch.cuda.get_device_name())
                 inputs = inputs.unsqueeze(1)  # 增加一個新的維度來表示通道
-                # print(inputs.shape)
+                # logger.info(inputs.shape)
                 outputs, cls_token_features = model(inputs) #結果出來了
-                # print(outputs)
+                # logger.info(outputs)
 
                 _, preds = torch.max(outputs.data, 1) #preds表示最大得分類別
                 t = (preds == labels).squeeze()
@@ -358,15 +357,15 @@ class Train_1D:
                         acc = 0
 
                     file.write(f'Train Accuracy of {c}: {str(acc)}% \n')
-                    print('Train Accuracy of %5s : %8.4f %%' % (c, acc))
-                    print(c+':',train_class_total[i])
+                    logger.info('Train Accuracy of %5s : %8.4f %%' % (c, acc))
+                    logger.info(c+':',train_class_total[i])
 
                 train_acc = train_acc_add #/ len(self.classes)
                 file.write(f'Training Accuracy: {str(train_acc)}')
                 file.write(f' | Training loss: {str(training_loss)}\n')
-                print('Training Accuracy: ',train_acc)
+                logger.info('Training Accuracy: ',train_acc)
 
-            print('Training loss: {:.4f}\taccuracy: {:.4f}\n'.format(training_loss,training_acc))
+            logger.info('Training loss: {:.4f}\taccuracy: {:.4f}\n'.format(training_loss,training_acc))
 
             # if training_acc > best_train_acc:
             #     best_train_acc = training_acc
@@ -381,15 +380,15 @@ class Train_1D:
         plt.legend()
         plt.savefig(f"{self.subdir}/loss_curve.png")
         plt.show()
-        print(f"Loss curve saved to {self.subdir}/loss_curve.png")
+        logger.info(f"Loss curve saved to {self.subdir}/loss_curve.png")
 
-        print(f'Best model save to: ./{self.subdir}/pth/model-best_val_acc.pth')
+        logger.info(f'Best model save to: {self.subdir}/pth/model-best_val_acc.pth')
         parameter_total = sum([param.nelement() for param in model.parameters()])
-        print("Number of parameter: %.2fM" % (parameter_total/1e6))
+        logger.info("Number of parameter: %.2fM" % (parameter_total/1e6))
         # model.load_state_dict(best_model_params)
         # best_model_name = './{}/pth/multi-ViT-model-best_train_acc.pth'.format(subdir,best_val_acc)
         # torch.save(model, best_model_name)
-        # print("Best model name : " + best_model_name)
+        # logger.info("Best model name : " + best_model_name)
         # draw('Training Loss Curve', 'epoch', 'loss', epochnum, train_loss, valL_loss, 'Training Loss Curve.png')
 
 
@@ -441,13 +440,13 @@ class Train_1D_Swin(Train_1D):
                 f.write(f'  {cname}: {acc:.2f}%\n')
             f.write(f'  Avg Acc: {val_acc:.4f}  Loss: {val_loss:.4f}  F1: {f1:.4f}\n\n')
 
-        print(f'Validation — Loss: {val_loss:.4f}  Acc: {val_acc:.4f}  F1: {f1:.4f}')
+        logger.info(f'Validation — Loss: {val_loss:.4f}  Acc: {val_acc:.4f}  F1: {f1:.4f}')
 
         # 更新曲线 & 保存最佳模型
         self.val_loss_curve.append(val_loss)
         if val_acc >= self.best_val_acc:
             self.best_val_acc = val_acc
-            torch.save(model, f'./{self.subdir}/pth/model-best_val_acc.pth')
+            torch.save(model, f'{self.subdir}/pth/model-best_val_acc.pth')
 
     def train(self):
         model = self.model.cuda(device=device)
@@ -459,7 +458,7 @@ class Train_1D_Swin(Train_1D):
         for epoch in range(self.EPOCH):
             model.train()
             scheduler.step()
-            print(f'\nEpoch {epoch+1}/{self.EPOCH} — LR: {scheduler.get_last_lr()[0]:.2e}')
+            logger.info(f'\nEpoch {epoch+1}/{self.EPOCH} — LR: {scheduler.get_last_lr()[0]:.2e}')
 
             train_loss = 0.0
             train_correct = 0
@@ -495,7 +494,7 @@ class Train_1D_Swin(Train_1D):
                     f.write(f'  {cname}: {acc:.2f}%\n')
                 f.write(f'  Avg Acc: {train_acc:.4f}  Loss: {train_loss:.4f}\n\n')
 
-            print(f'Train   — Loss: {train_loss:.4f}  Acc: {train_acc:.4f}')
+            logger.info(f'Train   — Loss: {train_loss:.4f}  Acc: {train_acc:.4f}')
 
             # 每 epoch 验证
             self.validation(model, epoch)
@@ -505,5 +504,5 @@ class Train_1D_Swin(Train_1D):
         plt.plot(self.val_loss_curve,   label='Val   Loss')
         plt.legend()
         plt.savefig(f'{self.subdir}/loss_curve.png')
-        print(f'Loss curve → {self.subdir}/loss_curve.png')
-        print(f'Best model → {self.subdir}/pth/model-best_val_acc.pth')
+        logger.info(f'Loss curve → {self.subdir}/loss_curve.png')
+        logger.info(f'Best model → {self.subdir}/pth/model-best_val_acc.pth')
