@@ -234,22 +234,23 @@ def main():
         "password": 500,
     }
     # 多分類
-    run_sampling(
-        classes = classes,
-        DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',
-        MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/sampling',
-        UNDERSAMPLING = UNDERSAMPLING,
-        OVERSAMPLING = OVERSAMPLING,
-        isTestingData = False
-    )
-    # 產生 testing 資料 (不須 testing 的話可以不用跑)
     # run_sampling(
     #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
-    #     MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/sampling',
+    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',
+    #     MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/sampling',
+    #     UNDERSAMPLING = UNDERSAMPLING,
     #     OVERSAMPLING = OVERSAMPLING,
-    #     isTestingData = True
+    #     isTestingData = False
     # )
+    # 產生 testing 資料 (不須 testing 的話可以不用跑)
+    run_sampling(
+        classes = classes,
+        DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
+        MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/sampling',
+        UNDERSAMPLING = UNDERSAMPLING,
+        OVERSAMPLING = OVERSAMPLING,
+        isTestingData = True
+    )
     # 二分類
     # run_binary_sampling(
     #     classes = classes,
@@ -270,7 +271,7 @@ def main():
     # )
     
 if __name__ == "__main__":
-    file_handler = logging.FileHandler('./log/TON_sampling.log')
+    file_handler = logging.FileHandler('./log/TON_sampling_testing.log')
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)
