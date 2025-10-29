@@ -2,7 +2,7 @@ import glob
 from multiprocessing import Pool
 import os
 from utils.split_to_flows import split_files
-from steps.getFeatures_TON import runTCP_del, runUDP_del
+from steps.getFeatures_TON import runTCP_del, runUDP_del, run_del
 from steps.datasetProcessor_USTC_TFC2016 import DatasetProcesser_USTC_TFC2016
 from steps.sampling_USTC_TFC2016 import run_sampling, run_binary_sampling
 from utils.save_pcap import save_pcap
@@ -17,20 +17,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-# 攻擊類別
-classes = [
-    'benign',
-    "Injection",
-    "MITM",
-    "backdoor",
-    "DDoS",
-    "DoS",
-    "runsomware",
-    "scanning",
-    "XSS",
-    "password"
-]
 
 def rewrite_pcap():
     # 惡意流量 Malware
@@ -166,7 +152,8 @@ def filter_attack():
         "password",
         "xss",
         "dos",
-        "injection"
+        "injection",
+        "mitm"
     ]
     for attack_type in attack_dict:
         if attack_type in skip_attack_types:
@@ -192,16 +179,23 @@ def main():
     # filter_attack()
     # 計算出各類型的數量
     # count_pcaps('/sdc1/ytlindata/TON_IoT/attack_filter')
-    # 2. 特徵擷取
-    # TCP
-    with Pool(10) as p:
-        p.map(runTCP_del, ['Benign', 'Malware'])
-    # UDP
-    with Pool(10) as p:
-        p.map(runUDP_del, ['Benign', 'Malware'])
+    # 特徵擷取
+    # 攻擊類別
+    attack_class = [
+        "Injection",
+        "MITM",
+        # "backdoor",
+        "DDoS",
+        "DoS",
+        # "runsomware",
+        "scanning",
+        "XSS",
+        "password"
+    ]
+    run_del(attack_class)
     
 if __name__ == "__main__":
-    file_handler = logging.FileHandler('./log/TON_attack_filter_counting.log')
+    file_handler = logging.FileHandler('./log/TON_features.log')
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)
