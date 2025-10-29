@@ -4,7 +4,7 @@ import os
 from utils.split_to_flows import split_files
 from steps.getFeatures_TON import run_del
 from steps.datasetProcessor_TON import DatasetProcesser
-from steps.sampling_USTC_TFC2016 import run_sampling, run_binary_sampling
+from steps.sampling_TON import suggest, run_sampling, run_binary_sampling
 from utils.save_pcap import save_pcap
 from steps.filter_encrypted_TON import df, mf
 from steps.filter_attack_TON import fa
@@ -177,7 +177,7 @@ def main():
     # filter_encrypted_pcaps()
 
     # 計算出各類型的數量
-    # count_pcaps('/sdc1/ytlindata/TON_IoT/encrypted_filter)
+    # count_pcaps('/sdc1/ytlindata/TON_IoT/encrypted_filter')
 
     # 篩選攻擊
     # filter_attack()
@@ -201,57 +201,60 @@ def main():
 
     # 數據預處理，合併特徵並分割訓練集與測試集
     classes = [*['benign'], *attack_class]
-    DatasetProcesser(
-        data_path = '/sdc1/ytlindata/TON_IoT/del_120_5_flows(delall)',
-        save_to = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall',
-        classes = classes
-    ).run()
+    # DatasetProcesser(
+    #     data_path = '/sdc1/ytlindata/TON_IoT/del_120_5_flows(delall)',
+    #     save_to = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall',
+    #     classes = classes
+    # ).run()
     
-if __name__ == "__main__":
-    file_handler = logging.FileHandler('./log/TON_processor.log')
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    logger.addHandler(file_handler)
-    main()
-    
-    # 4. 不平衡資料處理
+    # 建議採樣數量
+    # counts = {
+    #     "benign": 971,
+    #     "Injection": 25140,
+    #     "MITM": 30,
+    #     "DDoS": 128487,
+    #     "DoS": 49,
+    #     "scanning": 15747,
+    #     "XSS": 12,
+    #     "password": 9
+    # }
+    # suggest(counts)
+
+    # 不平衡資料處理
     UNDERSAMPLING = { 
-        'benign': 4000*15,
-        "Cridex": 4000*3, 
-        "Neris": 4000*3, 
-        "Virut": 4000*4,
+        "Injection": 6702, 
+        "DDoS": 15151, 
+        "scanning": 5304,
     }
     OVERSAMPLING = {
-        "Geodo": 8000,
-        "Htbot": 8000,
-        "Miuref": 7000,
-        "Nsis-ay": 7500,
-        "Shifu": 9500,
-        "Tinba": 9000,
-        "Zeus": 10000
+        'benign': 1317,
+        "MITM": 500,
+        "DoS": 500,
+        "XSS": 500,
+        "password": 500,
     }
     # 多分類
-    # run_sampling(
-    #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/train',
-    #     MULTI_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/sampling',
-    #     UNDERSAMPLING = UNDERSAMPLING,
-    #     OVERSAMPLING = OVERSAMPLING,
-    #     isTestingData = False
-    # )
+    run_sampling(
+        classes = classes,
+        DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',
+        MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/sampling',
+        UNDERSAMPLING = UNDERSAMPLING,
+        OVERSAMPLING = OVERSAMPLING,
+        isTestingData = False
+    )
     # 產生 testing 資料 (不須 testing 的話可以不用跑)
     # run_sampling(
     #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test',
-    #     MULTI_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test/sampling',
+    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
+    #     MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/sampling',
     #     OVERSAMPLING = OVERSAMPLING,
     #     isTestingData = True
     # )
     # 二分類
     # run_binary_sampling(
     #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/train',
-    #     BINARY_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/binary_sampling',
+    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',
+    #     BINARY_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/binary_sampling',
     #     UNDERSAMPLING = UNDERSAMPLING,
     #     OVERSAMPLING = OVERSAMPLING,
     #     isTestingData = False
@@ -259,10 +262,16 @@ if __name__ == "__main__":
     # 產生二分類資料 (不須 testing 的話可以不用跑)
     # run_binary_sampling(
     #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test',
-    #     BINARY_PATH = '/sdc1/ytlindata/USTC-TFC2016/120_5_flows_delall/test/binary_sampling',
+    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
+    #     BINARY_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/binary_sampling',
     #     UNDERSAMPLING = UNDERSAMPLING,
     #     OVERSAMPLING = OVERSAMPLING,
     #     isTestingData = True
     # )
-    pass
+    
+if __name__ == "__main__":
+    file_handler = logging.FileHandler('./log/TON_sampling.log')
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(file_handler)
+    main()
