@@ -1,3 +1,4 @@
+import os
 from model.ViT_1D import ViT1D
 # from model.vit import ViT
 from utils.train_function import Train_1D
@@ -101,7 +102,7 @@ def binary_1DViT_delall_120():
     Train_1D(model, train_data_path, train_label_path, subdir, hyper_parameter, classes)
 
 if __name__ == '__main__':
-    file_handler = logging.FileHandler('./log/TON_training.log')
+    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ ,"../../logs/TON_ViT_training.log")))
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)

@@ -106,7 +106,7 @@ def multi_1DSwin_delall_120():
     )
 
 if __name__ == '__main__':
-    file_handler = logging.FileHandler('./log/TON_training_v2.log')
+    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ ,"../../logs/TON_Swin_training_v2.log")))
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)

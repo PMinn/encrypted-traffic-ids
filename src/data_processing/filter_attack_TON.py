@@ -11,7 +11,7 @@ import os
 import glob
 import logging
 from tqdm import tqdm
-from utils.save_pcap import save_pcap
+from data_processing.save_pcap import copy_pcap
 
 logger = logging.getLogger()
 
@@ -56,4 +56,4 @@ def fa(args):
                 os.makedirs(output_folder)
             if not os.path.exists(output_file):
                 logger.info(f"Attack found in {pcap}, saving to {output_file}") 
-                save_pcap(pcap_file = pcap, output_file = output_file)
+                copy_pcap(src_file = pcap, dest_file = output_file)

@@ -1,13 +1,13 @@
 import glob
 from multiprocessing import Pool
 import os
-from utils.split_to_flows import split_files
-from steps.getFeatures_TON import run_del
-from steps.datasetProcessor_TON import DatasetProcesser
-from steps.sampling_TON import suggest, run_sampling, run_binary_sampling
-from utils.save_pcap import save_pcap
-from steps.filter_encrypted_TON import df, mf
-from steps.filter_attack_TON import fa
+from data_processing.split_to_flows import split_files
+from data_processing.getFeatures_TON import run_del
+from data_processing.datasetProcessor_TON import DatasetProcesser
+from data_processing.sampling_TON import suggest, run_sampling, run_binary_sampling
+from data_processing.save_pcap import save_pcap
+from data_processing.filter_encrypted_TON import df, mf
+from data_processing.filter_attack_TON import fa
 import datetime
 import pyshark
 # from multiprocessing.dummy import Pool as ThreadPool
@@ -271,7 +271,7 @@ def main():
     # )
     
 if __name__ == "__main__":
-    file_handler = logging.FileHandler('./log/TON_sampling_testing.log')
+    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ ,"../../logs/TON_sampling_testing.log")))
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)

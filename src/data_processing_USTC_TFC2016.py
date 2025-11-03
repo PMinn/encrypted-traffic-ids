@@ -1,9 +1,9 @@
 import glob
 from multiprocessing import Pool
-from utils.split_to_flows import split_files
-from steps.getFeatures_USTC_TFC2016 import runTCP_del, runUDP_del
-from steps.datasetProcessor_USTC_TFC2016 import DatasetProcesser_USTC_TFC2016
-from steps.sampling_USTC_TFC2016 import run_sampling, run_binary_sampling
+from data_processing.split_to_flows import split_files
+from data_processing.getFeatures_USTC_TFC2016 import runTCP_del, runUDP_del
+from data_processing.datasetProcessor_USTC_TFC2016 import DatasetProcesser_USTC_TFC2016
+from data_processing.sampling_USTC_TFC2016 import run_sampling, run_binary_sampling
 
 if __name__ == "__main__":
     # 攻擊類別

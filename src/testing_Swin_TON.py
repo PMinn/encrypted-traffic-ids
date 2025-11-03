@@ -129,7 +129,7 @@ class Cross_dataset_validation:
         logger.info(f'Valid Accuracy: {val_acc:.4f} | Loss: {val_loss:.4f}')
 
 if __name__ == "__main__":
-    file_handler = logging.FileHandler('./log/TON_testing.log')
+    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ ,"../../logs/TON_Swin_testing.log")))
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)
