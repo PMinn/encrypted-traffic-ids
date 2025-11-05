@@ -196,7 +196,8 @@ def run_binary_sampling(classes, DATA_PATH, BINARY_PATH, UNDERSAMPLING, OVERSAMP
     data, label = sampling.load_data()
     if not isTestingData:
         # #########################  Oversampling ##############################################
-        data, label = sampling.get_oversampling(data, label, OVERSAMPLING, k = 3, cluster_balance_threshold = 0.005)
+        # data, label = sampling.get_oversampling(data, label, OVERSAMPLING, k = 3, cluster_balance_threshold = 0.005)
+        data, label = sampling.get_oversampling_by_random(data, label, OVERSAMPLING)
         # #########################  Undersampling #############################################
         data, label = sampling.get_undersampling(data, label, under_strategy = UNDERSAMPLING)
 

@@ -102,9 +102,9 @@ def binary_1DViT_delall_120():
     Train_1D(model, train_data_path, train_label_path, subdir, hyper_parameter, classes)
 
 if __name__ == '__main__':
-    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ ,"../../logs/TON_ViT_training.log")))
+    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ ,"../../logs/TON_ViT_training_binary.log")))
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(file_handler)
-    multi_1DViT_delall_120()
-    # binary_1DViT_delall_120()
+    # multi_1DViT_delall_120()
+    binary_1DViT_delall_120()

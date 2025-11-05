@@ -221,6 +221,7 @@ def main():
     # suggest(counts)
 
     # 不平衡資料處理
+    # 多分類
     UNDERSAMPLING = { 
         "Injection": 6702, 
         "DDoS": 15151, 
@@ -233,7 +234,6 @@ def main():
         "XSS": 500,
         "password": 500,
     }
-    # 多分類
     # run_sampling(
     #     classes = classes,
     #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',
@@ -243,15 +243,27 @@ def main():
     #     isTestingData = False
     # )
     # 產生 testing 資料 (不須 testing 的話可以不用跑)
-    run_sampling(
-        classes = classes,
-        DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
-        MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/sampling',
-        UNDERSAMPLING = UNDERSAMPLING,
-        OVERSAMPLING = OVERSAMPLING,
-        isTestingData = True
-    )
+    # run_sampling(
+    #     classes = classes,
+    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
+    #     MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/sampling',
+    #     UNDERSAMPLING = UNDERSAMPLING,
+    #     OVERSAMPLING = OVERSAMPLING,
+    #     isTestingData = True
+    # )
     # 二分類
+    UNDERSAMPLING = { 
+        "Injection": 6702, 
+        "DDoS": 8000, 
+        "scanning": 5304,
+    }
+    OVERSAMPLING = {
+        'benign': 5000,
+        "MITM": 800,
+        "DoS": 800,
+        "XSS": 800,
+        "password": 800,
+    }
     # run_binary_sampling(
     #     classes = classes,
     #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',

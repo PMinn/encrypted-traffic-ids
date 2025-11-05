@@ -1,5 +1,5 @@
 # Encrypted NIDS
-建議資料夾結構：
+## 建議資料夾結構
 
 ```text
 encrypted-NIDS/
@@ -21,3 +21,28 @@ encrypted-NIDS/
 ├── LICENSE
 └── README.md
 ```
+
+## 命名規則
+```
+<用途>_<資料集>(_<模型>)(_<方式>)(_<二/多分類>)(_<版本>).<副檔名>
+```
+### 用途
+ - dataProcessing: 資料處理
+ - testing: 測試
+ - training: 訓練
+
+### 資料集
+ - TON: The TON_IoT Datasets
+ - USTC: USTC-TFC2016
+
+### 模型
+ - ViT
+ - Swin
+
+### 方式
+ - Raw: 內容特徵
+ - Statistical: 統計特徵
+
+### 二/多分類
+ - Bin: 二分類
+ - Muti: 多分類

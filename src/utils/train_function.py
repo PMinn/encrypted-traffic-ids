@@ -93,11 +93,11 @@ class Train_1D:
         train_data, val_data, train_label, val_label = train_test_split(data,label, test_size=0.1, stratify=label, random_state=42)#分訓練/驗證
         logger.info('-' * 25 +'train data'+'-' * 25 )
         for i in set(train_label):
-            logger.info(f'{self.classes[i]}: ',np.sum(train_label == i ))
+            logger.info(f'{self.classes[i]}: {np.sum(train_label == i )}')
 
         logger.info('-' * 25 +'valid data'+'-' * 25 )
         for i in set(val_label):
-            logger.info(f'{self.classes[i]}: ',np.sum(val_label == i ))
+            logger.info(f'{self.classes[i]}: {np.sum(val_label == i )}')
 
         train_loader = self.get_dataLoader(train_data,train_label,batch_size)
         val_loader = self.get_dataLoader(val_data,val_label,batch_size)
@@ -110,7 +110,7 @@ class Train_1D:
         lr = self.init_lr * (0.001 ** (epoch // 10))
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
-        logger.info('learning rate:',lr )
+        logger.info(f'learning rate: {lr}')
 
 #######################################################################  binary  #############################################################################
 
@@ -184,7 +184,7 @@ class Train_1D:
         self.val_loss_curve.append(val_loss)
         self.valL_loss.append(val_loss)
         if epoch % 5 == 0:
-            torch.save(model, './{}/pth/model-{:.2f}-val_acc-{}-epoch.pth'.format(self.subdir,val_acc,epoch))
+            torch.save(model, '{}/pth/model-{:.2f}-val_acc-{}-epoch.pth'.format(self.subdir,val_acc,epoch))
 
         if val_acc >= self.best_val_acc:
             self.best_val_acc = val_acc
@@ -309,9 +309,9 @@ class Train_1D:
             # 在每个批次的迭代中，更新学习率
             # adjust_lr(optimizer, epoch)
             scheduler.step()# 更新学习率
-            logger.info("learning rate:", scheduler.get_last_lr())
+            logger.info(f"learning rate: {scheduler.get_last_lr()}")
 
-            logger.info()
+            logger.info("")
             logger.info('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch + 1,self.EPOCH,localtime))
             logger.info('-' * len('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch + 1,self.EPOCH,localtime)))
 
@@ -359,12 +359,12 @@ class Train_1D:
 
                     file.write(f'Train Accuracy of {c}: {str(acc)}% \n')
                     logger.info('Train Accuracy of %5s : %8.4f %%' % (c, acc))
-                    logger.info(c+':',train_class_total[i])
+                    logger.info(f'{c}:{train_class_total[i]}')
 
                 train_acc = train_acc_add #/ len(self.classes)
                 file.write(f'Training Accuracy: {str(train_acc)}')
                 file.write(f' | Training loss: {str(training_loss)}\n')
-                logger.info('Training Accuracy: ',train_acc)
+                logger.info(f'Training Accuracy: {train_acc}')
 
             logger.info('Training loss: {:.4f}\taccuracy: {:.4f}\n'.format(training_loss,training_acc))
 
@@ -527,11 +527,11 @@ class Train_Cnn(Train_1D):
         train_data, val_data, train_label, val_label = train_test_split(data,label, test_size=0.1, stratify=label, random_state=42)#分訓練/驗證
         logger.info('-' * 25 +'train data'+'-' * 25 )
         for i in set(train_label):
-            logger.info(f'{self.classes[i]}: ',np.sum(train_label == i ))
+            logger.info(f'{self.classes[i]}: {np.sum(train_label == i )}')
 
         logger.info('-' * 25 +'valid data'+'-' * 25 )
         for i in set(val_label):
-            logger.info(f'{self.classes[i]}: ',np.sum(val_label == i ))
+            logger.info(f'{self.classes[i]}: {np.sum(val_label == i )}')
 
         train_loader = self.get_dataLoader(train_data,train_label,batch_size)
         val_loader = self.get_dataLoader(val_data,val_label,batch_size)
@@ -569,7 +569,7 @@ class Train_Cnn(Train_1D):
             # 在每个批次的迭代中，更新学习率
             # adjust_lr(optimizer, epoch)
             scheduler.step()
-            logger.info("learning rate:", scheduler.get_last_lr())
+            logger.info(f"learning rate: {scheduler.get_last_lr()}")
 
             logger.info()
             logger.info('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch + 1,self.EPOCH,localtime))
@@ -622,7 +622,7 @@ class Train_Cnn(Train_1D):
                 train_acc = train_acc_add / len(self.classes)
                 file.write(f'Training Accuracy: {str(train_acc)}')
                 file.write(f' | Training loss: {str(training_loss)}\n')
-                logger.info('Training Accuracy: ',train_acc)
+                logger.info(f'Training Accuracy: {train_acc}')
 
             logger.info('Training loss: {:.4f}\taccuracy: {:.4f}\n'.format(training_loss,training_acc))
 
