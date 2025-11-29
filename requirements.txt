@@ -1,0 +1,6 @@
+numpy==2.2.6
+scapy==2.6.1
+tqdm==4.67.1
+scikit-learn==1.7.2
+imbalanced-learn==0.14.0
+pyshark==0.6
