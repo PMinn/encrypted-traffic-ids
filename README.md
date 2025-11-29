@@ -34,6 +34,8 @@ encrypted-NIDS/
 ### 資料集
  - TON: The TON_IoT Datasets
  - USTC: USTC-TFC2016
+ - CIC23: the CIC IoT 2023
+ - CIC18: CSE CIC IDS 2018
 
 ### 模型
  - ViT
@@ -42,7 +44,20 @@ encrypted-NIDS/
 ### 方式
  - Raw: 內容特徵
  - Statistical: 統計特徵
+ - Both: 內容及統計特徵
 
 ### 二/多分類
  - Bin: 二分類
  - Muti: 多分類
+
+## venv (可選)
+### 建立
+#### windows
+`python -m venv <project>`
+#### macOS/Linux
+`python -m venv <project>`
+### 啟動
+#### windows
+`<project>\Scripts\activate`
+#### macOS/Linux
+`source <project>/bin/activate`
