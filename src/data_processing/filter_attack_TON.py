@@ -20,7 +20,10 @@ def pre_filter(attack_dict_type, pcap):
     filename = pcap.split("/")[-1]
     # normal_scanning2.pcap.TCP_192-168-1-31_48334_192-168-1-190_22.pcap
     attributes = filename.split(".")[2].split("_")
-    key = (attributes[1].replace('-', '.'), attributes[2], attributes[3].replace('-', '.'), attributes[4], attributes[0].lower())
+    if len(attributes[1]) < 16:
+        key = (attributes[1].replace('-', '.'), attributes[2], attributes[3].replace('-', '.'), attributes[4], attributes[0].lower())
+    else:
+        key = (attributes[1].replace('-', ':'), attributes[2], attributes[3].replace('-', ':'), attributes[4], attributes[0].lower())
     if key in attack_dict_type:
         return True
     return False
@@ -28,8 +31,10 @@ def pre_filter(attack_dict_type, pcap):
 # 過濾攻擊執行緒的函式
 def fa(args):
     attack_dict_type, pcap = args
-    output_file = pcap.replace('/encrypted_filter/', '/attack_filter/')
-    if pre_filter(attack_dict_type, pcap) and not os.path.exists(output_file):
+    # output_file = pcap.replace('/encrypted_filter/', '/attack_filter/')
+    # output_file = pcap.replace('/split/', '/attack_filter_with_decrypt/')
+    if pre_filter(attack_dict_type, pcap):
+        # and not os.path.exists(output_file):
         cap = pyshark.FileCapture(pcap, keep_packets = False)
         save_flag = False
         for pkt in cap:
@@ -51,9 +56,10 @@ def fa(args):
                 break
         cap.close()
         if save_flag:
-            output_folder = "/".join(output_file.split("/")[:-1])
-            if not os.path.exists(output_folder):
-                os.makedirs(output_folder)
-            if not os.path.exists(output_file):
-                logger.info(f"Attack found in {pcap}, saving to {output_file}") 
-                copy_pcap(src_file = pcap, dest_file = output_file)
+            # output_folder = "/".join(output_file.split("/")[:-1])
+            # if not os.path.exists(output_folder):
+            #     os.makedirs(output_folder)
+            # if not os.path.exists(output_file):
+            # logger.info(f"Attack found in {pcap}, saving to {output_file}") 
+            # copy_pcap(src_file = pcap, dest_file = output_file)
+            logger.info(pcap) 
