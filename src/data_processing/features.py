@@ -231,9 +231,9 @@ def flow_to_features_file(flow_pcaps: list, output_file: str, packet_shape: tupl
         if '.UDP_' in pcapPath:
             traffic_type = 'UDP'
         try:
-            pkts = rdpcap(pcapPath)
-        except (Scapy_Exception, EOFError) as e:
-            logging.getLogger("features.flow_to_features_file").error(f"Error reading {pcapPath}: {e}")
+            pkts = rdpcap(pcapPath, count = (packet_shape[1] + 3))
+        except Exception as e:
+            logging.getLogger("features.flow_to_features_file").error(f"Error reading {pcapPath}: {e}", exc_info = True)
             del pkts
             continue
         # 跳過 TCP 連線的封包
@@ -244,13 +244,13 @@ def flow_to_features_file(flow_pcaps: list, output_file: str, packet_shape: tupl
             if not is_labelled(pcapPath, pkts):
                 del pkts
                 continue
-        used_pkt = get_used_pkt(traffic_type, packet_shape, pkts)
+        pkts = get_used_pkt(traffic_type, packet_shape, pkts)
         try:
             flow_features = extract_flow_features(pkts)
         except Exception as e:
             logging.getLogger("features.flow_to_features_file").warning(f"Error extracting flow features in {pcapPath}: {e}", exc_info = True)
             flow_features = None
-        raw_feature = preprocess_flow(packet_shape, used_pkt)
+        raw_feature = preprocess_flow(packet_shape, pkts)
         merge_features = merge_flow_and_raw_features(flow_features, raw_feature)
         features_list.append(merge_features)
         del pkts

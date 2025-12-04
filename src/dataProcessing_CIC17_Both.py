@@ -32,30 +32,30 @@ def rewrite_pcap():
             
 def split_pcap():
     from data_processing.split_to_flows import split_to_flows_from_file
-    # split_to_flows_from_file(
-    #     input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Tuesday-WorkingHours.pcap", # 輸入檔案路徑
-    #     output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Tuesday/", # 輸出資料夾路徑
-    #     splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
-    #     remove_original = False
-    # )
-    # split_to_flows_from_file(
-    #     input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Wednesday-workingHours.pcap", # 輸入檔案路徑
-    #     output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Wednesday/", # 輸出資料夾路徑
-    #     splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
-    #     remove_original = False
-    # )
-    # split_to_flows_from_file(
-    #     input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Thursday-WorkingHours.pcap", # 輸入檔案路徑
-    #     output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Thursday/", # 輸出資料夾路徑
-    #     splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
-    #     remove_original = False
-    # )
-    # split_to_flows_from_file(
-    #     input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Friday-WorkingHours.pcap", # 輸入檔案路徑
-    #     output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Friday/", # 輸出資料夾路徑
-    #     splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
-    #     remove_original = False
-    # )
+    split_to_flows_from_file(
+        input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Tuesday-WorkingHours.pcap", # 輸入檔案路徑
+        output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Tuesday/", # 輸出資料夾路徑
+        splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
+        remove_original = False
+    )
+    split_to_flows_from_file(
+        input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Wednesday-workingHours.pcap", # 輸入檔案路徑
+        output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Wednesday/", # 輸出資料夾路徑
+        splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
+        remove_original = False
+    )
+    split_to_flows_from_file(
+        input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Thursday-WorkingHours.pcap", # 輸入檔案路徑
+        output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Thursday/", # 輸出資料夾路徑
+        splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
+        remove_original = False
+    )
+    split_to_flows_from_file(
+        input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Friday-WorkingHours.pcap", # 輸入檔案路徑
+        output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Friday/", # 輸出資料夾路徑
+        splitCapPath = "/home/alanpan/encrypted-NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
+        remove_original = False
+    )
     split_to_flows_from_file(
         input_file = "/home/alanpan/datasets/CIC-IDS-2017/rewrite/Monday-WorkingHours.pcap", # 輸入檔案路徑
         output_dir = "/home/alanpan/datasets/CIC-IDS-2017/split/Monday/", # 輸出資料夾路徑
@@ -87,7 +87,7 @@ def get_features_0307():
     pcaps = glob.glob('/home/alanpan/datasets/CIC-IDS-2017/split/Monday/split_*/*.pcap')
     flow_to_features_file(
         pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Monday-03-07-2017/benign_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Monday-03-07-2017/benign_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape
     )
 
@@ -98,14 +98,14 @@ def get_features_0407():
     ftp_pataor_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_.*_192-168-10-50_21\.', pcap)]
     flow_to_features_file(
         ftp_pataor_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Tuesday-04-07-2017/ftp_pataor_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Tuesday-04-07-2017/ftp_pataor_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499170672 <= pkts[0].time <= 1499174417
     )
     ssh_pataor_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_.*_192-168-10-50_22\.', pcap)]
     flow_to_features_file(
         ssh_pataor_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Tuesday-04-07-2017/ssh_pataor_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Tuesday-04-07-2017/ssh_pataor_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499188141 <= pkts[0].time <= 1499195060
     )
@@ -117,32 +117,32 @@ def get_features_0507():
     dos_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_.*_192-168-10-50_80\.', pcap)]
     flow_to_features_file(
         dos_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/dos_hulk_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/dos_hulk_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: (1499262203 <= pkts[0].time <= 1499263642)
     )
     flow_to_features_file(
         dos_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/dos_goldeneye_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/dos_goldeneye_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499263803 <= pkts[0].time <= 1499264409
     )
     flow_to_features_file(
         dos_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/dos_slowloris_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/dos_slowloris_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499258934 <= pkts[0].time <= 1499260279
     )
     flow_to_features_file(
         dos_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/dos_slowhttptest_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/dos_slowhttptest_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499260537 <= pkts[0].time <= 1499261870
     )
     heartbleed_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_45022_192-168-10-51_444\.', pcap)]
     flow_to_features_file(
         heartbleed_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/heartbleed_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/heartbleed_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499278335 <= pkts[0].time <= 1499279564
     )
@@ -154,56 +154,56 @@ def get_features_0607():
     web_attack_sql_injection_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_.*_192-168-10-50_80\.', pcap)]
     flow_to_features_file(
         web_attack_sql_injection_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/web_attack_sql_injection_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/web_attack_sql_injection_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499348127 <= pkts[0].time <= 1499348576
     )
     web_attack_xss_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_(?!(36180|36182|36184|36186|36188|36190)$)_192-168-10-50_80\.', pcap)]
     flow_to_features_file(
         web_attack_xss_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/web_attack_xss_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/web_attack_xss_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499346935 <= pkts[0].time <= 1499348122
     )
     web_attack_brute_force_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_.*_192-168-10-50_80\.', pcap)]
     flow_to_features_file(
         web_attack_brute_force_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/web_attack_brute_force_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/web_attack_brute_force_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499343354 <= pkts[0].time <= 1499346012
     )
     infiltration2_pcaps = [pcap for pcap in pcaps if re.search(r'_192-168-10-8_.*_205-174-165-73_', pcap)]
     flow_to_features_file(
         infiltration2_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration2_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration2_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499361542 <= pkts[0].time <= 1499366770
     )
     infiltration1_pcaps = [pcap for pcap in pcaps if re.search(r'_192-168-10-25_.*_205-174-165-73_', pcap)]
     flow_to_features_file(
         infiltration1_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration1_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration1_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499363616 <= pkts[0].time <= 1499371340
     )
     infiltration31_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_(50122|50133)_192-168-10-51_', pcap)]
     flow_to_features_file(
         infiltration31_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration31_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration31_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499360431 <= pkts[0].time <= 1499360446
     )
     infiltration32_pcaps = [pcap for pcap in pcaps if re.search(r'_192-168-10-8_.*_192-168-10-5_', pcap)]
     flow_to_features_file(
         infiltration32_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration32_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration32_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499362410 <= pkts[0].time <= 1499362445
     )
     infiltration33_pcaps = [pcap for pcap in pcaps if re.search(r'_192-168-10-8_.*_192-168-10-(5|9|12|14|15|16|17|19|25|50|51)_', pcap)]
     flow_to_features_file(
         infiltration33_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration33_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration33_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499364314 <= pkts[0].time <= 1499366765
     )
@@ -215,85 +215,90 @@ def get_features_0707():
     infiltration_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_.*_192-168-10-50_', pcap)]
     flow_to_features_file(
         infiltration_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Friday-07-07-2017/infiltration_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Friday-07-07-2017/infiltration_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499446532 <= pkts[0].time <= 1499447949 or 1499449905 <= pkts[0].time <= 1499451842
     )
     botnet_ares_pcaps = [pcap for pcap in pcaps if re.search(r'_192-168-10-(15|9|14|5|8)_.*_205-174-165-73_', pcap)]
     flow_to_features_file(
         botnet_ares_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Friday-07-07-2017/botnet_ares_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Friday-07-07-2017/botnet_ares_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499432653 <= pkts[0].time <= 1499457685
     )
     ddos_pcaps = [pcap for pcap in pcaps if re.search(r'_172-16-0-1_.*_192-168-10-50_', pcap)]
     flow_to_features_file(
         ddos_pcaps,
-        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/Friday-07-07-2017/ddos_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
+        output_file = f'/home/alanpan/datasets/CIC-IDS-2017/features/features/Friday-07-07-2017/ddos_features_{packet_shape[0]}_{packet_shape[1]}_24.npy',
         packet_shape = packet_shape,
         is_labelled = lambda pcapPath, pkts: 1499453791 <= pkts[0].time <= 1499454973
     )
     
-def mearge_features():
+def merge_features():
     from data_processing.features import mearge_feature_files, copy_feature_file
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Monday-03-07-2017/benign_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/benign_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Monday-03-07-2017/benign_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/benign_features_96_5_24.npy"
     )
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Tuesday-04-07-2017/ftp_pataor_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/ftp_brute_force_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Tuesday-04-07-2017/ftp_pataor_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/ftp_brute_force_features_96_5_24.npy"
     )
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Tuesday-04-07-2017/ssh_pataor_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/ssh_brute_force_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Tuesday-04-07-2017/ssh_pataor_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/ssh_brute_force_features_96_5_24.npy"
     )
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/dos_slowloris_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/dos_slowloris_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/dos_slowloris_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/dos_slowloris_features_96_5_24.npy"
     )
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/dos_slowhttptest_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/dos_slowhttptest_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/dos_slowhttptest_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/dos_slowhttptest_features_96_5_24.npy"
     )
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Wednesday-05-07-2017/dos_hulk_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/dos_hulk_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Wednesday-05-07-2017/dos_hulk_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/dos_hulk_features_96_5_24.npy"
     )
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Friday-07-07-2017/ddos_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/ddos_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Friday-07-07-2017/ddos_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/ddos_features_96_5_24.npy"
     )
     mearge_feature_files(
         [
-            "/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration31_features_96_5_24.npy",    
-            "/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration32_features_96_5_24.npy",    
-            "/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/infiltration33_features_96_5_24.npy",    
+            "/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration31_features_96_5_24.npy",    
+            "/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration32_features_96_5_24.npy",    
+            "/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/infiltration33_features_96_5_24.npy",    
         ],
-        output_file = '/home/alanpan/datasets/CIC-IDS-2017/features/final/port_scan_features_96_5_24.npy'
+        output_file = '/home/alanpan/datasets/CIC-IDS-2017/features/merged/port_scan_features_96_5_24.npy'
     )
     mearge_feature_files(
         [
-            "/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/web_attack_brute_force_features_96_5_24.npy",    
-            "/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/web_attack_sql_injection_features_96_5_24.npy",    
-            "/home/alanpan/datasets/CIC-IDS-2017/features/Thursday-06-07-2017/web_attack_xss_features_96_5_24.npy",    
+            "/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/web_attack_brute_force_features_96_5_24.npy",    
+            "/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/web_attack_sql_injection_features_96_5_24.npy",    
+            "/home/alanpan/datasets/CIC-IDS-2017/features/features/Thursday-06-07-2017/web_attack_xss_features_96_5_24.npy",    
         ],
-        output_file = '/home/alanpan/datasets/CIC-IDS-2017/features/final/web_features_96_5_24.npy'
+        output_file = '/home/alanpan/datasets/CIC-IDS-2017/features/merged/web_features_96_5_24.npy'
     )
     copy_feature_file(
-        "/home/alanpan/datasets/CIC-IDS-2017/features/Friday-07-07-2017/botnet_ares_features_96_5_24.npy",
-        "/home/alanpan/datasets/CIC-IDS-2017/features/final/botnet_ares_features_96_5_24.npy"
+        "/home/alanpan/datasets/CIC-IDS-2017/features/features/Friday-07-07-2017/botnet_ares_features_96_5_24.npy",
+        "/home/alanpan/datasets/CIC-IDS-2017/features/merged/botnet_ares_features_96_5_24.npy"
     )
 
 def split_features_to_train_test():
+    import json
     import numpy as np
     from sklearn.model_selection import train_test_split
-    train_folder = '/home/alanpan/datasets/CIC-IDS-2017/features/train'
-    test_folder = '/home/alanpan/datasets/CIC-IDS-2017/features/test'
+    train_folder = '/home/alanpan/datasets/CIC-IDS-2017/features/split/train'
+    test_folder = '/home/alanpan/datasets/CIC-IDS-2017/features/split/test'
     os.makedirs(train_folder, exist_ok = True)
     os.makedirs(test_folder, exist_ok = True)
-    features_npys = glob.glob('/home/alanpan/datasets/CIC-IDS-2017/features/final/*.npy')    
-    for index, features_npy in enumerate(features_npys):
+    features_npys = glob.glob('/home/alanpan/datasets/CIC-IDS-2017/features/merged/*.npy')
+    result = {
+        "train": {},
+        "test": {}
+    }
+    for features_npy in features_npys:
         filename = os.path.basename(features_npy)
         data = np.load(features_npy, allow_pickle = True)
         number_of_data = data.shape[0]
@@ -302,56 +307,67 @@ def split_features_to_train_test():
         number_of_test_data = test_data.shape[0]
         np.save(os.path.join(train_folder, filename), train_data, allow_pickle = False)
         np.save(os.path.join(test_folder, filename), test_data, allow_pickle = False)
-        # 建立 label
-        # np.save(os.path.join(train_folder, f"{filename.replace('.npy', '')}_label.npy"), np.ones(number_of_train_data).astype(int) * index, allow_pickle = False)
-        # np.save(os.path.join(test_folder, f"{filename.replace('.npy', '')}_label.npy"), np.ones(number_of_test_data).astype(int) * index, allow_pickle = False)
+        result["train"][filename] = number_of_train_data
+        result["test"][filename] = number_of_test_data
         logger.info(f"{filename}: total={number_of_data}, train={number_of_train_data}, test={number_of_test_data}")
+    with open('/home/alanpan/datasets/CIC-IDS-2017/features/split/train_test_split_info.json', 'w') as f:
+        json.dump(result, f, indent = 4)
 
-def run_sampling():
+def run_sampling_and_labeling():
     from data_processing.sampling import sampling, get_oversampling_by_kmeans
     sampling(
-        {
-            'Benign': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/benign_features_96_5_24.npy',
+        [
+            {
+                'name': 'Benign',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/benign_features_96_5_24.npy',
                 'sampling_count': 64000
             },
-            'FTP-BruteForce': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/ftp_brute_force_features_96_5_24.npy',
+            {
+                'name': 'FTP-BruteForce',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/ftp_brute_force_features_96_5_24.npy',
                 'sampling_count': 3135
             },
-            'SSH-BruteForce': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/ssh_brute_force_features_96_5_24.npy',
+            {
+                'name': 'SSH-BruteForce',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/ssh_brute_force_features_96_5_24.npy',
                 'sampling_count': 3500
             },
-            'DoS-Slowloris': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/dos_slowloris_features_96_5_24.npy',
+            {
+                'name': 'DoS-Slowloris',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/dos_slowloris_features_96_5_24.npy',
                 'sampling_count': 3089
             },
-            'DoS-SlowHTTPTest': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/dos_slowhttptest_features_96_5_24.npy',
+            {
+                'name': 'DoS-SlowHTTPTest',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/dos_slowhttptest_features_96_5_24.npy',
                 'sampling_count': 3368
             },
-            'DoS-Hulk': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/dos_hulk_features_96_5_24.npy',
+            {
+                'name': 'DoS-Hulk',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/dos_hulk_features_96_5_24.npy',
                 'sampling_count': 4741
             },
-            'DDoS': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/ddos_features_96_5_24.npy',
+            {
+                'name': 'DDoS',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/ddos_features_96_5_24.npy',
                 'sampling_count': 12000
             },
-            'Port Scan': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/port_scan_features_96_5_24.npy',
+            {
+                'name': 'Port Scan',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/port_scan_features_96_5_24.npy',
                 'sampling_count': 16000
             },
-            'Web Attacks': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/web_features_96_5_24.npy',
+            {
+                'name': 'Web Attacks',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/web_features_96_5_24.npy',
                 'sampling_count': 3500
             },
-            'Bot': {
-                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/train/botnet_ares_features_96_5_24.npy',
+            {
+                'name': 'Bot',
+                'data_path': '/home/alanpan/datasets/CIC-IDS-2017/features/split/train/botnet_ares_features_96_5_24.npy',
                 'sampling_count': 3501
             }
-        },
+        ],
         save_to = '/home/alanpan/datasets/CIC-IDS-2017/features/sampled/train/',
         oversampling = get_oversampling_by_kmeans
     )
@@ -391,24 +407,11 @@ def main():
     # get_features_0707()
     
     # 合併特徵
-    # mearge_features()
+    # merge_features()
     
     # 分割成訓練集與測試集
     # split_features_to_train_test()
 
-    attack_class = [
-        "Injection",
-        "MITM",
-        # "backdoor",
-        "DDoS",
-        "DoS",
-        # "runsomware",
-        "scanning",
-        "XSS",
-        "password"
-    ]
-    classes = [*['benign'], *attack_class]
-    
     # 建議採樣數量
     # counts = {
     #     "benign": 971,
@@ -422,88 +425,28 @@ def main():
     # }
     # suggest(counts)
 
-    # 不平衡資料處理
-    # run_sampling()
-    # 多分類
-    UNDERSAMPLING = { 
-        "Injection": 6702, 
-        "DDoS": 15151, 
-        "scanning": 5304,
-    }
-    OVERSAMPLING = {
-        'benign': 1317,
-        "MITM": 500,
-        "DoS": 500,
-        "XSS": 500,
-        "password": 500,
-    }
-    # run_sampling(
-    #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',
-    #     MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/sampling',
-    #     UNDERSAMPLING = UNDERSAMPLING,
-    #     OVERSAMPLING = OVERSAMPLING,
-    #     isTestingData = False
-    # )
-    # 產生 testing 資料 (不須 testing 的話可以不用跑)
-    # run_sampling(
-    #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
-    #     MULTI_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/sampling',
-    #     UNDERSAMPLING = UNDERSAMPLING,
-    #     OVERSAMPLING = OVERSAMPLING,
-    #     isTestingData = True
-    # )
-    # 二分類
-    UNDERSAMPLING = { 
-        "Injection": 6702, 
-        "DDoS": 8000, 
-        "scanning": 5304,
-    }
-    OVERSAMPLING = {
-        'benign': 5000,
-        "MITM": 800,
-        "DoS": 800,
-        "XSS": 800,
-        "password": 800,
-    }
-    # run_binary_sampling(
-    #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/train',
-    #     BINARY_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/binary_sampling',
-    #     UNDERSAMPLING = UNDERSAMPLING,
-    #     OVERSAMPLING = OVERSAMPLING,
-    #     isTestingData = False
-    # )
-    # 產生二分類資料 (不須 testing 的話可以不用跑)
-    # run_binary_sampling(
-    #     classes = classes,
-    #     DATA_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test',
-    #     BINARY_PATH = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/test/binary_sampling',
-    #     UNDERSAMPLING = UNDERSAMPLING,
-    #     OVERSAMPLING = OVERSAMPLING,
-    #     isTestingData = True
-    # )
-    
+    # 採樣及標記
+    run_sampling_and_labeling()
+
     # 將混和特徵轉 raw 特徵
-    slice_sampled_features()
+    # slice_sampled_features()
     
 if __name__ == "__main__":
     filename = os.path.splitext(os.path.basename(__file__))[0]
     
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    
+    formatter = logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)", datefmt = "%Y-%m-%d %H:%M:%S")
     file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ , f"../../logs/{filename}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.log")))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    file_handler.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)", datefmt = "%Y-%m-%d %H:%M:%S"))
+    file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.INFO)
     logger.addHandler(file_handler)
     
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
-    console.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)", datefmt = "%Y-%m-%d %H:%M:%S"))
+    console.setFormatter(formatter)
     logger.addHandler(console)
 
     main()
