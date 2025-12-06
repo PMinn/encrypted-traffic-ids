@@ -1,12 +1,12 @@
 import shutil
 import numpy as np
-from scapy.all import rdpcap, load_layer, Scapy_Exception, raw
+from scapy.all import rdpcap, load_layer, Scapy_Exception, raw, PacketList, Packet
 import glob
-from datetime import datetime, timezone, timedelta
 import os
 import logging
 from tqdm import tqdm
-from data_processing.FlowMeter.all import extract_flow_features
+from data_processing.FlowMeter.all import extract_flow_features, extract_flow_features_73, get_feature_names_73
+from pathlib import Path
 # Load the TLS layer (requires scapy-ssl_tls extension)
 load_layer("tls")
 
@@ -34,15 +34,15 @@ def save_np_files(directory: str, b_flows: list, m_flows: list, attack_class: li
     np.save(f'{directory}/benign_t', b_flows, allow_pickle=False)
     logging.getLogger("features.save_np_files").info(f'benign is {len(b_flows)}')
 
-def get_used_pkt(traffic_type, img_shape, pkts):
+def get_used_pkt(traffic_type: str, img_shape: tuple, pkts: PacketList) -> list[Packet]:
     """
         取得用於特徵提取的封包
         Args:
             traffic_type (str): 流量類型 ('TCP' 或 'UDP')
             img_shape (tuple): 影像形狀 (高度, 寬度)
-            pkts (list): 封包列表
+            pkts (PacketList): 封包列表
         Returns:
-            list: 用於特徵提取的封包列表
+            list[Packet]: 用於特徵提取的封包列表
     """
     if traffic_type == 'TCP':
         used_pkt = pkts[3:img_shape[1] + 3]
@@ -171,67 +171,42 @@ def run_del(attack_class, packet_shape = (96, 5)):
         attack_class
     )
 
-def merge_flow_and_raw_features(flow_features: dict | None, raw_feature: list) -> list:
+def merge_flow_and_raw_features(flow_feature_order: list, flow_features: dict | None, raw_feature: list) -> list:
     """
         合併流量特徵與原始特徵
         Args:
+            flow_feature_order (list): 流量特徵的順序列表
             flow_features (dict): 流量特徵字典
             raw_feature (list): 原始特徵列表
         Returns:
             list: 合併後的特徵列表
     """
-    # 按照固定順序加入 flow features
-    flow_feature_order = [
-        "Flow Duration",
-        "Total Fwd Packets",
-        "Total Backward Packets",
-        "Destination Port",
-        "Source Port",
-        "Flow Packets/s",
-        "Flow Bytes/s",
-        "Total Length of Fwd Packets",
-        "Total Length of Bwd Packets",
-        "Fwd Packet Length Mean",
-        "Bwd Packet Length Mean",
-        "Max Packet Length",
-        "Min Packet Length",
-        "Packet Length Std",
-        "SYN Flag Count",
-        "ACK Flag Count",
-        "Protocol",
-        "Fwd IAT Mean",
-        "Bwd IAT Mean",
-        "Fwd IAT Max",
-        "Fwd IAT Std",
-        "Bwd IAT Max",
-        "Avg Fwd Segment Size",
-        "Avg Bwd Segment Size",
-    ]
     feature_vector = []
     for key in flow_feature_order:
         feature_vector.append(flow_features.get(key, 0.0) if flow_features is not None else 0.0)
     feature_vector.extend(raw_feature)
     return feature_vector
 
-def flow_to_features_file(flow_pcaps: list, output_file: str, packet_shape: tuple = (96, 5), is_labelled: callable = None) -> list:
+def flow_to_features_file(flow_pcaps: list[Packet] | PacketList, output_file: Path, packet_shape: tuple = (96, 5), is_labelled: callable = None) -> list:
     """
         將流量 pcap 轉換為特徵檔案
         Args:
-            flow_pcaps (list): 流量 pcap 檔案列表
-            output_file (str): 輸出特徵檔案路徑
+            flow_pcaps (list[Packet] | PacketList): 流量 pcap 檔案列表
+            output_file (Path): 輸出特徵檔案路徑
             packet_shape (tuple): 封包形狀 (位元組數, 封包數)
             is_labelled (callable, optional): 標記回調函數，接受 pcapPath 和 pkts 作為參數
         Returns:
             list: 提取的特徵列表
     """
+    flow_feature_order = get_feature_names_73()
     features_list = []
     print("length of flow_pcaps:", len(flow_pcaps))
     for pcapPath in tqdm(flow_pcaps):
         traffic_type = 'TCP'
-        if '.UDP_' in pcapPath:
+        if '.UDP_' in str(pcapPath):
             traffic_type = 'UDP'
         try:
-            pkts = rdpcap(pcapPath, count = (packet_shape[1] + 3))
+            pkts = rdpcap(str(pcapPath), count = (packet_shape[1] + 3))
         except Exception as e:
             logging.getLogger("features.flow_to_features_file").error(f"Error reading {pcapPath}: {e}", exc_info = True)
             del pkts
@@ -246,35 +221,35 @@ def flow_to_features_file(flow_pcaps: list, output_file: str, packet_shape: tupl
                 continue
         pkts = get_used_pkt(traffic_type, packet_shape, pkts)
         try:
-            flow_features = extract_flow_features(pkts)
+            flow_features = extract_flow_features_73(pkts)
         except Exception as e:
             logging.getLogger("features.flow_to_features_file").warning(f"Error extracting flow features in {pcapPath}: {e}", exc_info = True)
             flow_features = None
         raw_feature = preprocess_flow(packet_shape, pkts)
-        merge_features = merge_flow_and_raw_features(flow_features, raw_feature)
+        merge_features = merge_flow_and_raw_features(flow_feature_order, flow_features, raw_feature)
         features_list.append(merge_features)
         del pkts
     logging.getLogger("features.flow_to_features_file").info(f'Extracted features from {len(features_list)} flows.')
     # 儲存特徵檔案
     features_array = np.asarray(features_list)
-    os.makedirs(os.path.dirname(output_file), exist_ok = True)
-    np.save(output_file, features_array, allow_pickle = False)
+    output_file.parent.mkdir(parents = True, exist_ok = True)
+    np.save(str(output_file), features_array, allow_pickle = False)
     logging.getLogger("features.flow_to_features_file").info(f'Saved features to {output_file}')
     return features_list
 
-def mearge_feature_files(feature_files: list, output_file: str):
+def mearge_feature_files(feature_files: list[Path], output_file: Path):
     """
         合併多個特徵檔案為一個檔案
         Args:
-            feature_files (list): 特徵檔案列表
-            output_file (str): 輸出特徵檔案路徑
+            feature_files (list[Path]): 特徵檔案列表
+            output_file (Path): 輸出特徵檔案路徑
         Returns:
             None
     """
     all_features = []
     for feature_file in tqdm(feature_files):
         try:
-            features = np.load(feature_file)
+            features = np.load(str(feature_file))
             if features.size == 0:
                 logging.getLogger("features.merge_feature_files").warning(f"No features in {feature_file}, skipping.")
                 continue
@@ -284,22 +259,22 @@ def mearge_feature_files(feature_files: list, output_file: str):
             continue
     if all_features:
         merged_features = np.concatenate(all_features, axis = 0)
-        os.makedirs(os.path.dirname(output_file), exist_ok = True)
-        np.save(output_file, merged_features, allow_pickle = False)
+        output_file.parent.mkdir(parents = True, exist_ok = True)
+        np.save(str(output_file), merged_features, allow_pickle = False)
         logging.getLogger("features.merge_feature_files").info(f'Merged features saved to {output_file}')
     else:
         logging.getLogger("features.merge_feature_files").warning(f"No features to merge in {output_file}.")
         
-def copy_feature_file(feature_file: str, output_file: str):
+def copy_feature_file(feature_file: Path, output_file: Path):
     """
         複製多個特徵檔案到指定目錄
         Args:
-            feature_file (str): 特徵檔案路徑
-            output_file (str): 輸出檔案路徑
+            feature_file (Path): 特徵檔案路徑
+            output_file (Path): 輸出檔案路徑
         Returns:
             None
     """
-    os.makedirs(os.path.dirname(output_file), exist_ok = True)
+    output_file.parent.mkdir(parents = True, exist_ok = True)
     try:
         shutil.copy(feature_file, output_file)
         logging.getLogger("features.copy_feature_file").info(f'Copied {feature_file} to {output_file}')

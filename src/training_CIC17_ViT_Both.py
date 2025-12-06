@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 import time
 import random
-
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 import numpy as np
@@ -15,7 +14,6 @@ from torch.utils.data import DataLoader, TensorDataset
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
 import matplotlib.pyplot as plt
-
 from data_processing.FlowMeter.extract_flow_features_73 import get_feature_names_73
 from model.Adapter_Token_ViT_1D import Adapter_Token_ViT_1D
 from utils.EarlyStopping import EarlyStopping
@@ -473,21 +471,18 @@ def evaluate(model, dataloader, num_classes, criterion, device):
 if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     
-    filename = os.path.splitext(os.path.basename(__file__))[0]
-    
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)", datefmt = "%Y-%m-%d %H:%M:%S")
     
-    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ , f"../../logs/{filename}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.log")))
-    # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    file_handler.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)", datefmt = "%Y-%m-%d %H:%M:%S"))
+    file_handler = logging.FileHandler(a2p("@/logs") / f"{Path(__file__).stem}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.log")
+    file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.INFO)
     logger.addHandler(file_handler)
     
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
-    console.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)", datefmt = "%Y-%m-%d %H:%M:%S"))
+    console.setFormatter(formatter)
     logger.addHandler(console)
 
     logger.getChild("matplotlib").setLevel(logging.WARNING)

@@ -25,7 +25,7 @@ alias: dict = get_alias()
 
 def a2p(path: str) -> Path:
     """
-        將帶有別名的路徑轉換為實際路徑
+        alias to path 將帶有別名的路徑轉換為實際路徑
         Args:
             path (str): 帶有別名的路徑
         Returns:
