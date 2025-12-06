@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 '''
 因惡意 pcap 中，有混合攻擊與非攻擊的封包，
 所以需要再處理，過濾出 pcap 中有攻擊的封包。 

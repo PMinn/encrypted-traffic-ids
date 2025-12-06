@@ -1,6 +1,7 @@
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
 from scapy.packet import Packet
+from scapy.all import PacketList
 import statistics
 import math
 
@@ -313,11 +314,11 @@ class FlowStats:
 
         return feat
 
-def extract_flow_features_73(pkts: list[Packet]):
+def extract_flow_features_73(pkts: PacketList) -> dict | None:
     """
         從一組 scapy Packet list 中提取 flow 特徵
         Args:
-            pkts(list[Packet]): list of scapy Packet
+            pkts(PacketList) -> dict | None: list of scapy Packet
         Returns:
             feature_dict: dict of flow features
     """

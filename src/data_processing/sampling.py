@@ -1,11 +1,11 @@
+from typing import Callable, TypedDict
 import json
 import logging
 from pathlib import Path
 import numpy as np
-import os
 
 def get_oversampling_by_kmeans(x, y, strategy, k = 3, cluster_balance_threshold = 0.005):
-    from imblearn.over_sampling import KMeansSMOTE
+    from imblearn.over_sampling import KMeansSMOTE # type: ignore
     before_unique, before_counts = np.unique(y, return_counts = True)
     oversample = KMeansSMOTE(sampling_strategy = strategy, random_state = 42, k_neighbors = k, cluster_balance_threshold = cluster_balance_threshold)  # 0.0016
     x, y = oversample.fit_resample(x, y)
@@ -21,16 +21,21 @@ def get_oversampling_by_random(x, y, strategy):
     return x, y, (before_counts, after_counts)
 
 def get_undersampling_by_random(x, y, strategy):
-    from imblearn.under_sampling import RandomUnderSampler
+    from imblearn.under_sampling import RandomUnderSampler # type: ignore
     before_unique, before_counts = np.unique(y, return_counts = True)
     undersample = RandomUnderSampler(sampling_strategy = strategy, random_state = 42)
     x, y = undersample.fit_resample(x, y)
     after_unique, after_counts = np.unique(y, return_counts = True)
     return x, y, (before_counts, after_counts)
 
-def load_data(classes_info: list[dict[str, str | Path | int]]) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+class ClassesInfo(TypedDict):
+    name: str
+    data_path: Path
+    sampling_count: int
+
+def load_data(classes_info: list[ClassesInfo]) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
     x = []
-    y = []
+    y: list[int] = []
     data_counts = {}
     for index, class_info in enumerate(classes_info):
         data = np.load(str(class_info['data_path']))
@@ -40,7 +45,7 @@ def load_data(classes_info: list[dict[str, str | Path | int]]) -> tuple[np.ndarr
         data_counts[class_info['name']] = number_of_data
     return np.array(x), np.array(y), data_counts
     
-def sampling(classes_info: list[dict[str, str | Path | int]], save_to: Path, oversampling: callable = get_oversampling_by_random, undersampling: callable = get_undersampling_by_random):
+def sampling(classes_info: list[ClassesInfo], save_to: Path, oversampling: Callable = get_oversampling_by_random, undersampling: Callable = get_undersampling_by_random):
     """
         根據指定的採樣數量對各類別進行過採樣或欠採樣
         Args:

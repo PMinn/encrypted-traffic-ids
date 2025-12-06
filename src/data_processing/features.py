@@ -1,3 +1,4 @@
+from typing import Callable
 import shutil
 import numpy as np
 from scapy.all import rdpcap, load_layer, Scapy_Exception, raw, PacketList, Packet
@@ -5,36 +6,12 @@ import glob
 import os
 import logging
 from tqdm import tqdm
-from data_processing.FlowMeter.all import extract_flow_features, extract_flow_features_73, get_feature_names_73
+from src.data_processing.FlowMeter.extract_flow_features_73 import extract_flow_features_73, get_feature_names_73
 from pathlib import Path
 # Load the TLS layer (requires scapy-ssl_tls extension)
 load_layer("tls")
 
-def save_np_files(directory: str, b_flows: list, m_flows: list, attack_class: list):
-    """
-        儲存 numpy 檔案
-        Args:
-            directory (str): 儲存目錄
-            b_flows (list): 正常流量資料
-            m_flows (list of list): 惡意流量資料
-            attack_class (list): 攻擊類別名稱列表
-        Returns:
-            None
-    """
-    for i in range(len(m_flows)):
-        m_flows[i] = np.asarray(m_flows[i])
-    b_flows = np.asarray(b_flows)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    logging.getLogger("features.save_np_files").info(f'Number of each class: ')
-    logging.getLogger("features.save_np_files").info('-' * 50)
-    for i, a in enumerate(attack_class):
-        np.save(f'{directory}/{a}_t', m_flows[i], allow_pickle=False)
-        logging.getLogger("features.save_np_files").info(f'{a} is {len(m_flows[i])}')
-    np.save(f'{directory}/benign_t', b_flows, allow_pickle=False)
-    logging.getLogger("features.save_np_files").info(f'benign is {len(b_flows)}')
-
-def get_used_pkt(traffic_type: str, img_shape: tuple, pkts: PacketList) -> list[Packet]:
+def get_used_pkt(traffic_type: str, img_shape: tuple, pkts: PacketList) -> PacketList:
     """
         取得用於特徵提取的封包
         Args:
@@ -84,93 +61,6 @@ def preprocess_flow(IMG_SHAPE, pkts):
         flow = flow[:size]
     return flow
 
-def run_del(attack_class, packet_shape = (96, 5)):
-    """
-        執行數據預處理，合併特徵並分割訓練集與測試集
-        Args:
-            attack_class (list): 攻擊類別名稱列表
-            packet_shape (tuple): 封包形狀 (高度, 寬度)
-        Returns:
-            None
-    """
-    b_flows = []
-    m_flows = [[] for _ in range(len(attack_class))]
-    label_count = [0 for _ in range(len(attack_class) + 1)]
-    # TCP & Benign
-    traffic_type = 'TCP'
-    pcapsPath = glob.glob(f'/sdc1/ytlindata/TON_IoT/attack_filter/Benign/split_*/*{traffic_type}*')
-    for pcapPath in tqdm(pcapsPath):
-        try:
-            pkts = rdpcap(pcapPath, count=(packet_shape[1] + 3))
-        except (Scapy_Exception, EOFError):
-            del pkts
-            continue
-        # 跳過 TCP 連線的封包
-        if traffic_type == 'TCP' and len(pkts) < 4:
-            del pkts
-            continue
-        pkts = get_used_pkt(traffic_type, packet_shape, pkts)
-        flow = preprocess_flow(packet_shape, pkts)
-        b_flows.append(flow)
-        label_count[0] += 1
-        del pkts
-    # TCP & Malicious
-    for classType in attack_class:
-        attackPcapsPath = glob.glob(f'/sdc1/ytlindata/TON_IoT/attack_filter/Malicious/{classType}/split_*/*{traffic_type}*')
-        label = attack_class.index(classType) + 1
-        for pcapPath in tqdm(attackPcapsPath):
-            try:
-                pkts = rdpcap(pcapPath, count=(packet_shape[1] + 3))
-            except (Scapy_Exception, EOFError):
-                del pkts
-                continue
-            # 跳過 TCP 連線的封包
-            if traffic_type == 'TCP' and len(pkts) < 4:
-                del pkts
-                continue
-            label_count[label] += 1
-            pkts = get_used_pkt(traffic_type, packet_shape, pkts)
-            flow = preprocess_flow(packet_shape, pkts)
-            m_flows[label - 1].append(flow)
-            del pkts
-    # UDP & Benign
-    traffic_type = 'UDP'
-    pcapsPath = glob.glob(f'/sdc1/ytlindata/TON_IoT/attack_filter/Benign/split_*/*{traffic_type}*')
-    for pcapPath in tqdm(pcapsPath):
-        try:
-            pkts = rdpcap(pcapPath, count=(packet_shape[1] + 3))
-        except (Scapy_Exception, EOFError):
-            del pkts
-            continue
-        pkts = get_used_pkt(traffic_type, packet_shape, pkts)
-        flow = preprocess_flow(packet_shape, pkts)
-        b_flows.append(flow)
-        label_count[0] += 1
-        del pkts
-    # UDP & Malicious
-    for classType in attack_class:
-        attackPcapsPath = glob.glob(f'/sdc1/ytlindata/TON_IoT/attack_filter/Malicious/{classType}/split_*/*{traffic_type}*')
-        label = attack_class.index(classType) + 1
-        for pcapPath in tqdm(attackPcapsPath):
-            try:
-                pkts = rdpcap(pcapPath, count=(packet_shape[1] + 3))
-            except (Scapy_Exception, EOFError):
-                del pkts
-                continue
-            label_count[label] += 1
-            pkts = get_used_pkt(traffic_type, packet_shape, pkts)
-            flow = preprocess_flow(packet_shape, pkts)
-            m_flows[label - 1].append(flow)
-            del pkts
-    # save files
-    logging.getLogger("features.run_del").info(label_count)
-    save_np_files(
-        f"/sdc1/ytlindata/TON_IoT/del_{packet_shape[0]}_{packet_shape[1]}_flows(delall)",
-        b_flows,
-        m_flows,
-        attack_class
-    )
-
 def merge_flow_and_raw_features(flow_feature_order: list, flow_features: dict | None, raw_feature: list) -> list:
     """
         合併流量特徵與原始特徵
@@ -187,7 +77,7 @@ def merge_flow_and_raw_features(flow_feature_order: list, flow_features: dict | 
     feature_vector.extend(raw_feature)
     return feature_vector
 
-def flow_to_features_file(flow_pcaps: list[Packet] | PacketList, output_file: Path, packet_shape: tuple = (96, 5), is_labelled: callable = None) -> list:
+def flow_to_features_file(flow_pcaps: PacketList, output_file: Path, packet_shape: tuple = (96, 5), is_labelled: Callable | None = None) -> list:
     """
         將流量 pcap 轉換為特徵檔案
         Args:

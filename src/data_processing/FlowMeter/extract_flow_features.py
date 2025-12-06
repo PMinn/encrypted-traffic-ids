@@ -1,7 +1,9 @@
+from typing import Iterable
 import scapy
-from scapy.all import rdpcap, IP, IPv6, TCP, UDP, load_layer, Scapy_Exception, raw
+from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.inet6 import IPv6
 import statistics
-from .FlowMeter_Exception import NoPacketsException, NoIPPacketsException
+from src.data_processing.FlowMeter.FlowMeter_Exception import NoPacketsException, NoIPPacketsException
 
 def extract_flow_features(pkts: scapy.plist.PacketList) -> dict[str, int | float]:
     """
@@ -181,11 +183,11 @@ def extract_flow_features(pkts: scapy.plist.PacketList) -> dict[str, int | float
 
     return features
 
-def safe_mean(values: list[float]) -> float:
-    return statistics.mean(values) if values else 0.0
+def safe_mean(values: Iterable[float | int]) -> float:
+    return statistics.mean(list(values)) if values else 0.0
 
-def safe_stdev(values: list[float]) -> float:
-    return statistics.pstdev(values) if len(values) > 1 else 0.0
+def safe_stdev(values: Iterable[float | int]) -> float:
+    return statistics.pstdev(values) if len(list(values)) > 1 else 0.0
 
 def get_feature_names():
     return [

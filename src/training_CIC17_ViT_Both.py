@@ -5,11 +5,14 @@ import json
 from pathlib import Path
 import time
 import random
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import train_test_split # type: ignore
+from sklearn.metrics import accuracy_score  # type: ignore
+from sklearn.metrics import f1_score 
 import numpy as np
+from numpy import ndarray
 from tabulate import tabulate
 import torch
+from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
@@ -367,8 +370,8 @@ def train_one_epoch(model: torch.nn.Module, dataloader: torch.utils.data.DataLoa
     """
     model.train()
     total_loss = 0.0
-    all_preds = []
-    all_labels = []
+    all_preds: list[ndarray] = []
+    all_labels: list[ndarray] = []
 
     for seq, flow, labels in dataloader:
         seq = seq.to(device)        # [B, seq_len]
@@ -386,23 +389,25 @@ def train_one_epoch(model: torch.nn.Module, dataloader: torch.utils.data.DataLoa
         total_loss += loss.item() * labels.size(0)
 
         preds = torch.argmax(logits, dim = 1)
-        all_preds.append(preds.detach().cpu()) # 將預測結果存到 CPU 上
-        all_labels.append(labels.detach().cpu()) # 將標籤存到 CPU 上
+        all_preds.append(preds.detach().cpu().numpy()) # 將預測結果存到 CPU 上
+        all_labels.append(labels.detach().cpu().numpy()) # 將標籤存到 CPU 上
 
-    all_preds = torch.cat(all_preds).numpy()
-    all_labels = torch.cat(all_labels).numpy()
+    all_preds = np.concatenate(all_preds)
+    all_labels = np.concatenate(all_labels)
 
-    avg_loss = total_loss / len(dataloader.dataset)
+    if type(dataloader.dataset) is TensorDataset:
+        avg_loss: float = total_loss / len(dataloader.dataset)
+    else:
+        avg_loss = 0.0
     acc = accuracy_score(all_labels, all_preds)
 
     # ====== 每類別 accuracy ======
-    per_class_acc = {}
+    per_class_acc: dict[int, float | None] = {}
     for cls in range(num_classes):
         mask = (all_labels == cls)
-        if mask.sum() == 0:
-            per_class_acc[cls] = None
-        else:
-            per_class_acc[cls] = (all_preds[mask] == all_labels[mask]).mean()
+        total = np.sum(mask)
+        correct = np.sum(all_preds[mask] == all_labels[mask])
+        per_class_acc[cls] = float(correct / total) if total > 0 else None
 
     return avg_loss, acc, per_class_acc
 
@@ -424,8 +429,8 @@ def evaluate(model, dataloader, num_classes, criterion, device):
     """
     model.eval()
     total_loss = 0.0
-    all_preds = []
-    all_labels = []
+    all_preds: list[ndarray] = []
+    all_labels: list[ndarray] = []
 
     with torch.no_grad():
         for seq, flow, labels in dataloader:
@@ -440,11 +445,11 @@ def evaluate(model, dataloader, num_classes, criterion, device):
             total_loss += loss.item() * labels.size(0)
 
             preds = torch.argmax(logits, dim=1)
-            all_preds.append(preds.detach().cpu())
-            all_labels.append(labels.detach().cpu())
+            all_preds.append(preds.detach().cpu().numpy())
+            all_labels.append(labels.detach().cpu().numpy())
 
-    all_preds = torch.cat(all_preds).numpy()
-    all_labels = torch.cat(all_labels).numpy()
+    all_preds = np.concatenate(all_preds)
+    all_labels = np.concatenate(all_labels)
 
     avg_loss = total_loss / len(dataloader.dataset)
     acc = accuracy_score(all_labels, all_preds)
@@ -453,10 +458,9 @@ def evaluate(model, dataloader, num_classes, criterion, device):
     per_class_acc = {}
     for cls in range(num_classes):
         mask = (all_labels == cls)
-        if mask.sum() == 0:
-            per_class_acc[cls] = None
-        else:
-            per_class_acc[cls] = (all_preds[mask] == all_labels[mask]).mean()
+        total = np.sum(mask)
+        correct = np.sum(all_preds[mask] == all_labels[mask])
+        per_class_acc[cls] = float(correct / total) if total > 0 else None
 
     # ====== F1-score ======
     # macro: 對每類別算 F1 再平均（不看類別比例）

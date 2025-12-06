@@ -1,4 +1,5 @@
-from scapy.all import TCP, IP, IPv6
+from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.inet6 import IPv6
 
 def is_tcp(pkt):
     return TCP in pkt and (IP in pkt or IPv6 in pkt)

@@ -259,7 +259,7 @@ def merge_features():
 def split_features_to_train_test():
     import json
     import numpy as np
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import train_test_split # type: ignore
     train_folder = a2p('@/data/CIC-IDS-2017/features/split/train')
     test_folder = a2p('@/data/CIC-IDS-2017/features/split/test')
     train_folder.mkdir(parents = True, exist_ok = True)
