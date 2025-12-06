@@ -187,3 +187,30 @@ def safe_mean(values: list[float]) -> float:
 def safe_stdev(values: list[float]) -> float:
     return statistics.pstdev(values) if len(values) > 1 else 0.0
 
+def get_feature_names():
+    return [
+        "Flow Duration",
+        "Total Fwd Packets",
+        "Total Backward Packets",
+        "Destination Port",
+        "Source Port",
+        "Flow Packets/s",
+        "Flow Bytes/s",
+        "Total Length of Fwd Packets",
+        "Total Length of Bwd Packets",
+        "Fwd Packet Length Mean",
+        "Bwd Packet Length Mean",
+        "Max Packet Length",
+        "Min Packet Length",
+        "Packet Length Std",
+        "SYN Flag Count",
+        "ACK Flag Count",
+        "Protocol",
+        "Fwd IAT Mean",
+        "Bwd IAT Mean",
+        "Fwd IAT Max",
+        "Fwd IAT Std",
+        "Bwd IAT Max",
+        "Avg Fwd Segment Size",
+        "Avg Bwd Segment Size",
+    ]

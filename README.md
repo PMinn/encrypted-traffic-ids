@@ -27,4 +27,6 @@ make install
 pip install -r requirements.txt
 ```
 [pytorch](https://pytorch.org/get-started/locally/) (torch、torchvision、torchaudio) 需依照 GPU 安裝
-
+```
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```

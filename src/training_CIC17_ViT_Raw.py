@@ -2,25 +2,23 @@ import os
 import datetime
 import logging
 import json
-from pathlib import Path
 import time
-import random
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 import numpy as np
-from tabulate import tabulate
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
 import matplotlib.pyplot as plt
+import random
+from pathlib import Path
+from tabulate import tabulate
 
-from data_processing.FlowMeter.extract_flow_features_73 import get_feature_names_73
-from model.Adapter_Token_ViT_1D import Adapter_Token_ViT_1D
+from model.ViT_1D import ViT1D
 from utils.EarlyStopping import EarlyStopping
 from utils.alias import a2p
-
 
 def set_seed(seed: int = 42):
     random.seed(seed)
@@ -48,22 +46,21 @@ def run_training():
     PATCH_SIZE = 12
     RL_STEP = 15
     SEQ_LEN = 480
-
     with open(a2p("@/data/CIC-IDS-2017/features/sampled/train/classes.json"), "r") as f:
         classes = json.load(f)
 
-    result_folder_path: Path = a2p("@/data/CIC-IDS-2017/result/both_multi/" + str(datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d-%H%M%S')))
+    result_folder_path: Path = a2p("@/data/CIC-IDS-2017/result/raw_multi/" + str(datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d-%H%M%S')))
     result_folder_path.mkdir(parents = True, exist_ok = True)
     (result_folder_path / 'pth').mkdir(parents = True, exist_ok = True)
 
     device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
     # === 讀取資料 ===
-    train_path = a2p('@/data/CIC-IDS-2017/features/sampled/train')
+    train_path = a2p("@/data/CIC-IDS-2017/features/sampled/train")
     data = np.load(f'{train_path}/sampled_data.npy')
     label = np.load(f'{train_path}/sampled_label.npy')
 
-    train_data, val_data, train_label, val_label = train_test_split(data, label, test_size = 0.1, stratify = label, random_state = 42) # 分訓練/驗證
+    train_data, val_data, train_label, val_label = train_test_split(data,label, test_size = 0.1, stratify = label, random_state = 42) # 分訓練/驗證
     logging.getLogger("run_training").info('-' * 25 + ' train data ' + '-' * 25 )
     table = []
     for i in set(train_label):
@@ -76,99 +73,14 @@ def run_training():
         table.append([i, classes[i], np.sum(val_label == i)])
     logging.getLogger("run_training").info("\n" + tabulate(table, headers = ["Id", "Class Name", "Count"]))
 
-    features_name_73 = get_feature_names_73()
-
-    keep_features_name = [
-        "Flow Duration",
-        "Total Fwd Packets",
-        "Total Backward Packets",
-        "Destination Port",
-        "Source Port",
-        "Flow Packets/s",
-        "Flow Bytes/s",
-        "Total Length of Fwd Packets",
-        "Total Length of Bwd Packets",
-        "Fwd Packet Length Mean",
-        "Bwd Packet Length Mean",
-        "Max Packet Length",
-        "Min Packet Length",
-        "Packet Length Std",
-        "SYN Flag Count",
-        "ACK Flag Count",
-        "Protocol",
-        "Fwd IAT Mean",
-        "Bwd IAT Mean",
-        "Fwd IAT Max",
-        "Fwd IAT Std",
-        "Bwd IAT Max",
-        "Avg Fwd Segment Size",
-        "Avg Bwd Segment Size",
-    ]
-    keep_features_index = [features_name_73.index(feat) for feat in keep_features_name]
-    if -1 in keep_features_index:
-        missing_feats = [keep_features_name[i] for i, idx in enumerate(keep_features_index) if idx == -1]
-        logging.getLogger("run_training").error(f"Some required features are missing in features_name_73: {missing_feats}")
-        raise ValueError(f"Some required features are missing in features_name_73: {missing_feats}")
-    keep_features_index.sort()
-    keep_features_name = [features_name_73[idx] for idx in keep_features_index]
-
-    log_scale_features_name = [
-        "Flow Duration",
-        "Total Fwd Packets",
-        "Total Backward Packets",
-        "Flow Packets/s",
-        "Flow Bytes/s",
-        "Total Length of Fwd Packets",
-        "Total Length of Bwd Packets",
-        "Fwd Packet Length Mean",
-        "Bwd Packet Length Mean",
-        "Max Packet Length",
-        "Min Packet Length",
-        "Packet Length Std",
-        "Fwd IAT Mean",
-        "Bwd IAT Mean",
-        "Fwd IAT Max",
-        "Fwd IAT Std",
-        "Bwd IAT Max",
-        "Avg Fwd Segment Size",
-        "Avg Bwd Segment Size",
-    ]
-    log_idx = [keep_features_name.index(feat) for feat in log_scale_features_name]
-    if -1 in log_idx:
-        missing_feats = [log_scale_features_name[i] for i, idx in enumerate(log_idx) if idx == -1]
-        logging.getLogger("run_training").error(f"Some log-scale features are missing in keep_features_name: {missing_feats}")
-        raise ValueError(f"Some log-scale features are missing in keep_features_name: {missing_feats}")
-
-    std_scale_features_name = [
-        "SYN Flag Count",
-        "ACK Flag Count",
-        "Protocol",
-        "Destination Port",
-        "Source Port",
-    ]
-    z_only_idx = [keep_features_name.index(feat) for feat in std_scale_features_name]
-    if -1 in z_only_idx:
-        missing_feats = [std_scale_features_name[i] for i, idx in enumerate(z_only_idx) if idx == -1]
-        logging.getLogger("run_training").error(f"Some std-scale features are missing in keep_features_name: {missing_feats}")
-        raise ValueError(f"Some std-scale features are missing in keep_features_name: {missing_feats}")
-
-    train_flow_features = train_data[:, keep_features_index]
-    mu, sigma = fit_normalizer(train_flow_features, log_idx, z_only_idx)
-    train_flow_features = transform_normalizer(train_flow_features, mu, sigma, log_idx, z_only_idx)
     train_data = train_data[:, 73:]
     train_data = train_data / 255
-    
-    val_flow_features = val_data[:, keep_features_index]
-    val_flow_features = transform_normalizer(val_flow_features, mu, sigma, log_idx, z_only_idx)
     val_data = val_data[:, 73:]
     val_data = val_data / 255
-    
-    np.savez(result_folder_path / 'normalize.npz', mu = mu, sigma = sigma)
     
     train_loader = DataLoader(
         TensorDataset(
             torch.tensor(train_data, dtype = torch.float),
-            torch.tensor(train_flow_features, dtype = torch.float),
             torch.tensor(train_label, dtype = torch.long)
         ),
         batch_size = BATCH_SIZE,
@@ -178,7 +90,6 @@ def run_training():
     val_loader = DataLoader(
         TensorDataset(
             torch.tensor(val_data, dtype = torch.float),
-            torch.tensor(val_flow_features, dtype = torch.float),
             torch.tensor(val_label, dtype = torch.long)
         ),
         batch_size = BATCH_SIZE
@@ -191,16 +102,15 @@ def run_training():
     if SEQ_LEN != train_data.shape[1]:
         logging.getLogger("run_training").error(f"Sequence length must match the input data length. Expected {SEQ_LEN}, got {train_data.shape[1]}")
         raise ValueError(f"Sequence length must match the input data length. Expected {SEQ_LEN}, got {train_data.shape[1]}")
-    
-    model = Adapter_Token_ViT_1D(
+
+    model = ViT1D(
         seq_len = SEQ_LEN,
         patch_size = PATCH_SIZE,
         num_classes = len(classes),
         dim = 16,
         depth = 6,
         heads = 8,
-        mlp_dim = 32,
-        flow_feat_dim = 24,   # flow 統計特徵維度
+        mlp_dim = 32
     ).to(device)
 
     if torch.cuda.is_available():
@@ -229,12 +139,12 @@ def run_training():
     best_f1_per_class = None
     for epoch in range(1, EPOCH + 1):
         localtime = time.asctime(time.localtime(time.time()))
+       
+        train_loss, train_acc, train_per_class_acc = train_one_epoch(model, train_loader, len(classes), criterion, optimizer, device)
+        train_loss_curve.append(train_loss)
 
         logging.getLogger("run_training").info('-' * len('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch, EPOCH, localtime)))
         logging.getLogger("run_training").info('Epoch: {}/{} --- < Starting Time : {} >'.format(epoch, EPOCH, localtime))
-
-        train_loss, train_acc, train_per_class_acc = train_one_epoch(model, train_loader, len(classes), criterion, optimizer, device)
-        train_loss_curve.append(train_loss)
 
         with open(result_folder_path / 'train_Acc_Loss.txt', 'a') as file:
             file.write(f'Epoch: {epoch}/{EPOCH} | Starting Time : {localtime}\n')
@@ -274,7 +184,7 @@ def run_training():
         logging.getLogger("run_training").info(f"learning rate: {scheduler.get_last_lr()}")
 
         if (epoch - 1) % 5 == 0:
-            torch.save(model, '{}/pth/model-{:.2f}-val_acc-{}-epoch.pth'.format(result_folder_path, val_acc, epoch))
+            torch.save(model, f'{result_folder_path}/pth/model-{val_acc:.2f}-val_acc-{epoch}-epoch.pth')
 
     with open(result_folder_path / 'Best_valid_Acc.txt', 'w') as file:
         file.write(f'---------------------------- Best Validation Accuracy -------------------\n')
@@ -285,7 +195,7 @@ def run_training():
         for i, c in enumerate(classes):
             table.append([i, c, best_val_per_class_acc[i] * 100, best_f1_per_class[i]])
         file.write(tabulate(table, headers = ["#", "Class", "Accuracy", "F1 Score"], floatfmt = ".6f") + '\n\n')
-            
+
     plt.plot(range(1, len(train_loss_curve) + 1), train_loss_curve, label = "Training Loss", color = "blue")
     plt.plot(range(1, len(val_loss_curve) + 1), val_loss_curve, label = "Validation Loss", color = "orange")
     plt.xlabel("Epoch")
@@ -296,7 +206,6 @@ def run_training():
     plt.show()
     logging.getLogger("run_training").info(f"Loss curve saved to {result_folder_path}/loss_curve.png")
 
-    logging.getLogger("run_training").info(f'Best model save to: {result_folder_path}/pth/model-best_val_acc.pth')
     parameter_total = sum([param.nelement() for param in model.parameters()])
     logging.getLogger("run_training").info("Number of parameter: %.2fM" % (parameter_total/1e6))
     return best_epoch, best_val_acc, best_f1_macro, best_val_per_class_acc, best_f1_per_class
@@ -372,14 +281,13 @@ def train_one_epoch(model: torch.nn.Module, dataloader: torch.utils.data.DataLoa
     all_preds = []
     all_labels = []
 
-    for seq, flow, labels in dataloader:
+    for seq, labels in dataloader:
         seq = seq.to(device)        # [B, seq_len]
         seq = seq.unsqueeze(1)  # 增加一個新的維度來表示通道 [B, 1, seq_len]
-        flow = flow.to(device)      # [B, F]
         labels = labels.to(device)  # [B]
 
         optimizer.zero_grad() # 清除之前的梯度
-        logits, cls_token_features = model(seq, flow)          # logits: [B, num_classes]
+        logits, cls_token_features = model(seq)          # logits: [B, num_classes]
         loss = criterion(logits, labels)
 
         loss.backward()
@@ -430,13 +338,12 @@ def evaluate(model, dataloader, num_classes, criterion, device):
     all_labels = []
 
     with torch.no_grad():
-        for seq, flow, labels in dataloader:
+        for seq, labels in dataloader:
             seq = seq.to(device)
             seq = seq.unsqueeze(1)  # 增加一個新的維度來表示通道 [B, 1, seq_len]
-            flow = flow.to(device)
             labels = labels.to(device)
 
-            logits, _ = model(seq, flow)
+            logits, _ = model(seq)
             loss = criterion(logits, labels)
 
             total_loss += loss.item() * labels.size(0)
