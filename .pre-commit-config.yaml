@@ -1,0 +1,7 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 1.19.0
+    hooks:
+      - id: mypy
+        # Optional: Add args to mypy command, e.g., to ignore certain files or follow imports differently
+        # args: ["--ignore-missing-imports", "--follow-imports=skip"]
