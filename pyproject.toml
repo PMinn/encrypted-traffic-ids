@@ -3,7 +3,7 @@
 mypy_path = ["src"]
 
 # Python 版本（照你的專案改）
-python_version = "3.12"
+python_version = "3.10"
 
 # 嚴格模式基礎：等同於開啟一大堆嚴格選項
 strict = true
@@ -51,3 +51,8 @@ plugins = ["numpy.typing.mypy_plugin"]
 [[tool.mypy.overrides]]
 module = ["imblearn.*"]
 ignore_missing_imports = true
+
+[tool.codespell]
+skip = './.*,./env,./data,./pyproject.toml,./.git,./.gitignore,./.venv,./requirements.txt,./requirements-*.txt'
+count = true
+quiet-level = 3
