@@ -1,51 +1,54 @@
 from typing import Iterable
-import scapy
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
+from scapy.plist import PacketList
+from scapy.packet import Packet
 import statistics
-from src.data_processing.FlowMeter.FlowMeter_Exception import NoPacketsException, NoIPPacketsException
+from data_processing.FlowMeter.FlowMeter_Exception import (
+    NoPacketsException,
+    NoIPPacketsException,
+)
 
-def extract_flow_features(pkts: scapy.plist.PacketList) -> dict[str, int | float]:
+
+def extract_flow_features(pkts: PacketList) -> dict[str, int | float]:
     """
-        從封包列表中提取流量特徵
-        Args:
-            pkts (scapy.plist.PacketList): 封包列表
-        Returns:
-            dict[str, int | float]: 流量特徵字典
+    從封包列表中提取流量特徵
+    Args:
+        pkts (PacketList): 封包列表
+    Returns:
+        dict[str, int | float]: 流量特徵字典
     """
     if len(pkts) == 0:
         raise NoPacketsException("PCAP 中沒有封包")
 
     # 只保留有 IP 的封包
-    ip_pkts = [p for p in pkts if IP in p or IPv6 in p]
+    ip_pkts: list[Packet] = [p for p in pkts if IP in p or IPv6 in p]
     if not ip_pkts:
         raise NoIPPacketsException("PCAP 中沒有 IP 封包")
 
     # 以第一個 IP 封包決定 flow 的「前向」方向
     first = ip_pkts[0]
+    src_ip: str
+    dst_ip: str
     if IP in first:
         src_ip = first[IP].src
         dst_ip = first[IP].dst
     else:
         src_ip = first[IPv6].src
         dst_ip = first[IPv6].dst
-
     # 優先用 TCP/UDP 決定 port，否則 None
-    src_port = None
-    dst_port = None
+    src_port: int
+    dst_port: int
     if TCP in first:
-        src_port = first[TCP].sport
-        dst_port = first[TCP].dport
+        src_port = int(first[TCP].sport)
+        dst_port = int(first[TCP].dport)
         proto = 6
     elif UDP in first:
-        src_port = first[UDP].sport
-        dst_port = first[UDP].dport
+        src_port = int(first[UDP].sport)
+        dst_port = int(first[UDP].dport)
         proto = 17
     else:
-        if IP in first:
-            proto = first[IP].proto
-        else:
-            proto = first[IPv6].nh
+        raise NoIPPacketsException("Flow 中沒有 TCP/UDP 封包")
 
     # 方向分類
     fwd_lengths = []
@@ -77,8 +80,8 @@ def extract_flow_features(pkts: scapy.plist.PacketList) -> dict[str, int | float
         t = float(p.time)
 
         # 判斷方向：與第一個封包相同 src/dst 即為 forward
-        is_fwd = (ip.src == src_ip and ip.dst == dst_ip)
-        is_bwd = (ip.src == dst_ip and ip.dst == src_ip)
+        is_fwd = ip.src == src_ip and ip.dst == dst_ip
+        is_bwd = ip.src == dst_ip and ip.dst == src_ip
 
         # TCP flag 與 segment 大小
         tcp_seg_len = None
@@ -124,16 +127,16 @@ def extract_flow_features(pkts: scapy.plist.PacketList) -> dict[str, int | float
     total_bytes = total_fwd_bytes + total_bwd_bytes
 
     # 封包長度統計
-    max_len = max(all_lengths) if all_lengths else 0
-    min_len = min(all_lengths) if all_lengths else 0
+    max_len = int(max(all_lengths)) if len(all_lengths) > 0 else 0
+    min_len = int(min(all_lengths)) if len(all_lengths) > 0 else 0
     len_std = safe_stdev(all_lengths)
 
     # IAT（inter-arrival time）計算
-    def iat_stats(ts: list[float]):
+    def iat_stats(ts: list[float]) -> tuple[float, float, float]:
         if len(ts) < 2:
             return 0.0, 0.0, 0.0
         ts_sorted = sorted(ts)
-        diffs = [ts_sorted[i+1] - ts_sorted[i] for i in range(len(ts_sorted) - 1)]
+        diffs = [ts_sorted[i + 1] - ts_sorted[i] for i in range(len(ts_sorted) - 1)]
         mean_ = safe_mean(diffs)
         max_ = max(diffs) if diffs else 0.0
         std_ = safe_stdev(diffs)
@@ -183,13 +186,23 @@ def extract_flow_features(pkts: scapy.plist.PacketList) -> dict[str, int | float
 
     return features
 
+
 def safe_mean(values: Iterable[float | int]) -> float:
+    """
+    計算安全的平均值，若輸入為空則回傳 0.0
+    Args:
+        values (Iterable[float | int]): 數值可迭代物件
+    Returns:
+        float: 平均值或 0.0
+    """
     return statistics.mean(list(values)) if values else 0.0
+
 
 def safe_stdev(values: Iterable[float | int]) -> float:
     return statistics.pstdev(values) if len(list(values)) > 1 else 0.0
 
-def get_feature_names():
+
+def get_feature_names() -> list[str]:
     return [
         "Flow Duration",
         "Total Fwd Packets",

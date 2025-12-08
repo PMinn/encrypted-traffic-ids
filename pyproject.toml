@@ -1,0 +1,53 @@
+[tool.mypy]
+# 根目錄：請照專案實際路徑調整
+mypy_path = ["src"]
+
+# Python 版本（照你的專案改）
+python_version = "3.12"
+
+# 嚴格模式基礎：等同於開啟一大堆嚴格選項
+strict = true
+
+# 額外再更嚴謹／更安全的細節
+warn_unused_configs = true        # 設定檔裡沒用到的選項也警告
+allow_redefinition = false        # 禁止重複定義同名變數
+implicit_reexport = false         # from x import * 不再自動 re-export type
+
+# 對 Any 特別敏感
+disallow_any_generics = true      # List, Dict 這種未填 type 的 generic 直接報錯
+disallow_subclassing_any = true   # 禁止繼承 Any
+
+# 對未標註類型特別嚴格
+disallow_untyped_defs = true      # 函式/方法一定要有 type hints
+disallow_incomplete_defs = true   # 參數與回傳必須完整標註
+disallow_untyped_decorators = true
+
+# 對 Optional、None 嚴格處理
+no_implicit_optional = true       # 不允許把 T | None 寫成 T 的簡寫
+
+# 對未型別註解程式碼也做檢查（會很痛，但很有價值）
+check_untyped_defs = true
+disallow_untyped_calls = true
+
+# 提醒你多餘或錯誤的東西
+warn_no_return = true             # 沒 return 的分支
+warn_return_any = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+
+# 比較嚴謹的等號判斷
+strict_equality = true
+
+# 輸出選項（可調整喜好）
+show_column_numbers = true
+show_error_codes = true
+pretty = true
+color_output = true
+error_summary = true
+
+plugins = ["numpy.typing.mypy_plugin"]
+
+[[tool.mypy.overrides]]
+module = ["imblearn.*"]
+ignore_missing_imports = true
