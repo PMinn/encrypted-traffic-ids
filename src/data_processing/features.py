@@ -1,4 +1,4 @@
-from typing import Callable, Generator
+from typing import Callable, Generator, cast
 import shutil
 import numpy as np
 from scapy.all import rdpcap, load_layer, PacketList
@@ -14,6 +14,8 @@ from pathlib import Path
 # Load the TLS layer (requires scapy-ssl_tls extension)
 load_layer("tls")
 
+logger = logging.getLogger("features")
+
 
 def get_used_pkt(
     traffic_type: str, img_shape: tuple[int, int], pkts: PacketList
@@ -25,7 +27,7 @@ def get_used_pkt(
         img_shape (tuple[int, int]): 影像形狀 (高度, 寬度)
         pkts (PacketList): 封包列表
     Returns:
-        list[Packet]: 用於特徵提取的封包列表
+        PacketList: 用於特徵提取的封包列表
     """
     used_pkt: PacketList
     if traffic_type == "TCP":
@@ -102,7 +104,7 @@ def flow_to_features_file(
     """
     將流量 pcap 轉換為特徵檔案
     Args:
-        flow_pcaps (list[Packet] | PacketList): 流量 pcap 檔案列表
+        flow_pcaps (list[Path]): 流量 pcap 檔案列表
         output_file (Path): 輸出特徵檔案路徑
         packet_shape (tuple): 封包形狀 (位元組數, 封包數)
         is_labelled (Callable[[Path, PacketList], bool] | None): 標記回調函數，接受 pcapPath 和 pkts 作為參數
@@ -111,15 +113,14 @@ def flow_to_features_file(
     """
     flow_feature_order = get_feature_names_73()
     features_list = []
-    print("length of flow_pcaps:", len(list(flow_pcaps)))
     for pcapPath in tqdm(flow_pcaps):
         traffic_type = "TCP"
-        if ".UDP_" in str(pcapPath):
+        if ".UDP_" in pcapPath.name:
             traffic_type = "UDP"
         try:
             pkts = rdpcap(str(pcapPath), count=(packet_shape[1] + 3))
         except Exception as e:
-            logging.getLogger("features.flow_to_features_file").error(
+            logger.getChild("flow_to_features_file").error(
                 f"Error reading {pcapPath}: {e}", exc_info=True
             )
             del pkts
@@ -136,7 +137,7 @@ def flow_to_features_file(
         try:
             flow_features = extract_flow_features_73(pkts)
         except Exception as e:
-            logging.getLogger("features.flow_to_features_file").warning(
+            logger.getChild("flow_to_features_file").warning(
                 f"Error extracting flow features in {pcapPath}: {e}", exc_info=True
             )
             flow_features = None
@@ -146,16 +147,14 @@ def flow_to_features_file(
         )
         features_list.append(merge_features)
         del pkts
-    logging.getLogger("features.flow_to_features_file").info(
+    logger.getChild("flow_to_features_file").info(
         f"Extracted features from {len(features_list)} flows."
     )
     # 儲存特徵檔案
     features_array = np.asarray(features_list)
     output_file.parent.mkdir(parents=True, exist_ok=True)
     np.save(str(output_file), features_array, allow_pickle=False)
-    logging.getLogger("features.flow_to_features_file").info(
-        f"Saved features to {output_file}"
-    )
+    logger.getChild("flow_to_features_file").info(f"Saved features to {output_file}")
     return features_list
 
 
@@ -173,13 +172,13 @@ def mearge_feature_files(feature_files: list[Path], output_file: Path) -> None:
         try:
             features = np.load(str(feature_file))
             if features.size == 0:
-                logging.getLogger("features.merge_feature_files").warning(
+                logger.getChild("merge_feature_files").warning(
                     f"No features in {feature_file}, skipping."
                 )
                 continue
             all_features.append(features)
         except Exception as e:
-            logging.getLogger("features.merge_feature_files").error(
+            logger.getChild("merge_feature_files").error(
                 f"Error loading {feature_file}: {e}"
             )
             continue
@@ -187,11 +186,11 @@ def mearge_feature_files(feature_files: list[Path], output_file: Path) -> None:
         merged_features = np.concatenate(all_features, axis=0)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         np.save(str(output_file), merged_features, allow_pickle=False)
-        logging.getLogger("features.merge_feature_files").info(
+        logger.getChild("merge_feature_files").info(
             f"Merged features saved to {output_file}"
         )
     else:
-        logging.getLogger("features.merge_feature_files").warning(
+        logger.getChild("merge_feature_files").warning(
             f"No features to merge in {output_file}."
         )
 
@@ -208,10 +207,8 @@ def copy_feature_file(feature_file: Path, output_file: Path) -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
     try:
         shutil.copy(feature_file, output_file)
-        logging.getLogger("features.copy_feature_file").info(
+        logger.getChild("copy_feature_file").info(
             f"Copied {feature_file} to {output_file}"
         )
     except Exception as e:
-        logging.getLogger("features.copy_feature_file").error(
-            f"Error copying {feature_file}: {e}"
-        )
+        logger.getChild("copy_feature_file").error(f"Error copying {feature_file}: {e}")

@@ -487,7 +487,10 @@ def split_features_to_train_test() -> None:
 
 
 def run_sampling_and_labeling() -> None:
-    from data_processing.sampling import sampling, get_oversampling_by_kmeans
+    from data_processing.sampling_and_labeling import (
+        sampling,
+        get_oversampling_by_kmeans,
+    )
 
     sampling(
         [

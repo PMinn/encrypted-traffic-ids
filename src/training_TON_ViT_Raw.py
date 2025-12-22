@@ -1,110 +1,51 @@
 import os
-from model.ViT_1D import ViT1D
-# from model.vit import ViT
-from utils.train_function import Train_1D
-from datetime import datetime
+import datetime
 import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+from pathlib import Path
+from core.training_vit import run_vit_training_with_mlflow
+from utils.alias import a2p
 
-def multi_1DViT_delall_120():
-    gamma = 0.01
-    seed = 42
-    init_lr = 0.01
-    EPOCH = 100
-    BATCH_SIZE = 8192
-    # PATCH_SIZE = 10
-    PATCH_SIZE = 12
-    RL_STEP = 15
-    seq_size = 480
 
-    hyper_parameter = {
-        'batch_size': BATCH_SIZE,
-        'patch_size': PATCH_SIZE,
-        'epoch': EPOCH,
-        'gamma': gamma,
-        'learning_rate_step': RL_STEP,
-        'learning_rate': init_lr,
-        'seq_size': seq_size
-    }
-    classes = [
-        'benign',
-        "Injection",
-        "MITM",
-        # "backdoor",
-        "DDoS",
-        "DoS",
-        # "runsomware",
-        "scanning",
-        "XSS",
-        "password"
-    ]
-    num_classes = len(classes)
-    
-    train_path = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/sampling'
-    train_data_path = f'{train_path}/train_data.npy'
-    train_label_path = f'{train_path}/train_label.npy'
+if __name__ == "__main__":
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-    subdir = '/sdc1/ytlindata/TON_IoT/ViT/1Dmulti_result(120delall)/' + str(datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S'))
-
-    model = ViT1D(
-        seq_len = seq_size,
-        patch_size = PATCH_SIZE,
-        num_classes = num_classes,
-        dim = 16,
-        depth = 6,
-        heads = 8,
-        mlp_dim = 32
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "[%(asctime)s][%(name)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
-    Train_1D(model, train_data_path, train_label_path, subdir, hyper_parameter, classes)
 
-def binary_1DViT_delall_120():
-    gamma = 0.01
-    seed = 42
-    init_lr = 0.01
-    EPOCH = 100
-    BATCH_SIZE = 4096
-    PATCH_SIZE = 30
-    RL_STEP = 7
-    seq_size = 480
-
-    hyper_parameter = {
-        'batch_size': BATCH_SIZE,
-        'patch_size': PATCH_SIZE,
-        'epoch': EPOCH,
-        'gamma': gamma,
-        'learning_rate_step': RL_STEP,
-        'learning_rate': init_lr,
-        'seq_size': seq_size
-    }
-    classes = [
-        'benign',
-        'malicious'
-    ]
-    num_classes = len(classes)
-
-    train_path = '/sdc1/ytlindata/TON_IoT/120_5_flows_delall/binary_sampling'
-    train_data_path = f'/{train_path}/train_data.npy'
-    train_label_path = f'/{train_path}/train_label.npy'
-
-    subdir = '/sdc1/ytlindata/TON_IoT/ViT/binary_1Dmulti_result(120delall)/' + str(datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S'))
-
-    model = ViT1D(
-        seq_len = seq_size,
-        patch_size = PATCH_SIZE,
-        num_classes = num_classes,
-        dim = 16,
-        depth = 6,
-        heads = 8,
-        mlp_dim = 32
+    file_handler = logging.FileHandler(
+        a2p("@/logs")
+        / f"{Path(__file__).stem}_{datetime.datetime.now().strftime('%Y%m%d%H%M')}.log"
     )
-    Train_1D(model, train_data_path, train_label_path, subdir, hyper_parameter, classes)
-
-if __name__ == '__main__':
-    file_handler = logging.FileHandler(os.path.abspath(os.path.join(__file__ ,"../../logs/TON_ViT_training_binary.log")))
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    # file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
     logger.addHandler(file_handler)
-    # multi_1DViT_delall_120()
-    binary_1DViT_delall_120()
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+
+    logger.getChild("matplotlib").setLevel(logging.WARNING)
+
+    run_vit_training_with_mlflow(
+        experiment_name="TON_IoT",
+        run_name="Raw ViT Multi-class Classification Sampled 10%",
+        config={
+            "model_name": "vit",
+            "seed": 42,
+            "batch_size": 8192,
+            "gamma": 0.01,
+            "lr": 0.01,
+            "epochs": 100,
+            "patch_size": 16,
+            "rl_step": 15,
+            "seq_len": 480,
+            "task": "multi-class classification",
+        },
+        features=[],
+        dataset_path=a2p("@/data/TON_IoT/features/sampled_10P/train/sampled_data.npy"),
+    )

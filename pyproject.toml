@@ -49,7 +49,7 @@ error_summary = true
 plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
-module = ["imblearn.*"]
+module = ["imblearn.*","pyshark.*"]
 ignore_missing_imports = true
 
 [tool.codespell]

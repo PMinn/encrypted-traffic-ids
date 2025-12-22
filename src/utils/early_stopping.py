@@ -58,7 +58,7 @@ class EarlyStopping:
 
             # 保存 checkpoint
             if model is not None and self.path:
-                torch.save(model, self.path)
+                torch.save(model.state_dict(), self.path)
 
             if self.verbose:
                 self.logger.info(f"Validation accuracy improved to {val_acc:.4f}.")

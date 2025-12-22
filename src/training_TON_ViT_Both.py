@@ -2,8 +2,8 @@ import os
 import datetime
 import logging
 from pathlib import Path
-from utils.alias import a2p
 from core.training_adapter_token_vit import run_adapter_token_vit_training_with_mlflow
+from utils.alias import a2p
 
 
 if __name__ == "__main__":
@@ -32,8 +32,8 @@ if __name__ == "__main__":
     logger.getChild("matplotlib").setLevel(logging.WARNING)
 
     run_adapter_token_vit_training_with_mlflow(
-        experiment_name="CIC-IDS-2017",
-        run_name="Adapter Token VIT1D Multi-class Classification",
+        experiment_name="TON_IoT",
+        run_name="Adapter Token ViT1D Multi-class Classification Fixed Time Sampled 10%",
         config={
             "model_name": "adapter_token_vit",
             "seed": 42,
@@ -72,5 +72,9 @@ if __name__ == "__main__":
             "Avg Fwd Segment Size",
             "Avg Bwd Segment Size",
         ],
-        dataset_path=a2p("@/data/CIC-IDS-2017/features/sampled/train/sampled_data.npy"),
+        dataset_path=a2p(
+            "@/data/TON_IoT/features_fixed_time/sampled_10P/train/sampled_data.npy"
+        ),
     )
+    # features_nonMalucusIsBenign
+    # features_fixed_time
