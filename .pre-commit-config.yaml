@@ -1,4 +1,9 @@
 repos:
+  - repo: https://github.com/psf/black
+    rev: 25.12.0  # 請確認使用最新的版本
+    hooks:
+      - id: black
+        language_version: python3.10.12  # 替換為你的 Python 版本
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
@@ -6,7 +11,7 @@ repos:
         additional_dependencies:
           - tomli # 使用 pyproject.toml
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.3.0
+    rev: v1.19.1
     hooks:
       - id: mypy
         # entry: bash -c 'echo $PWD && mypy "$@"'
@@ -39,8 +44,3 @@ repos:
 
             torch==2.9.1,
           ]
-  - repo: https://github.com/psf/black
-    rev: 25.11.0  # 請確認使用最新的版本
-    hooks:
-      - id: black
-        language_version: python3.10.12  # 替換為你的 Python 版本
