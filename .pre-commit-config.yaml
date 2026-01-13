@@ -43,4 +43,7 @@ repos:
             pandas-stubs==2.3.3.251201,
 
             torch==2.9.1,
+
+            line-bot-sdk==3.21.0,
+            python-dotenv==1.2.1,
           ]
