@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     run_adapter_token_vit_training_with_mlflow(
         experiment_name="TON_IoT",
-        run_name="Adapter Token ViT1D Multi-class Classification Fixed Time Sampled 10%",
+        run_name="Adapter Token ViT1D Multi-class Classification Sampled 10%",
         config={
             "model_name": "adapter_token_vit",
             "seed": 42,
@@ -72,9 +72,7 @@ if __name__ == "__main__":
             "Avg Fwd Segment Size",
             "Avg Bwd Segment Size",
         ],
-        dataset_path=a2p(
-            "@/data/TON_IoT/features_fixed_time/sampled_10P/train/sampled_data.npy"
-        ),
+        dataset_path=a2p("@/data/TON_IoT/features/sampled_10P/train/sampled_data.npy"),
     )
     # features_nonMalucusIsBenign
     # features_fixed_time

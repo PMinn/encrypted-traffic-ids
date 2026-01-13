@@ -25,7 +25,7 @@ from model.Adapter_Token_ViT_1D import Adapter_Token_ViT_1D
 from utils.early_stopping import EarlyStopping
 from utils.alias import a2p
 from utils.hash import sha256_file, sha256_text
-from utils.save_log import log_json_artifact
+from utils.save_log import log_json_artifact, log_npz_artifact
 from utils.set_seed import set_seed_to
 from utils.normalizer import fit_normalizer, transform_normalizer
 import mlflow
@@ -164,6 +164,7 @@ def run_adapter_token_vit_training(
     val_data = val_data / 255
 
     np.savez(result_folder_path / "normalize.npz", mu=mu, sigma=sigma)
+    log_npz_artifact("normalize.npz", mu=mu, sigma=sigma)
 
     train_loader = DataLoader(
         TensorDataset(
@@ -295,7 +296,7 @@ def run_adapter_token_vit_training(
                 "\n" + tabulate(table, headers=["#", "Class", "Accuracy", "F1 Score"])
             )
 
-        stop, improved = early_stopping.check(val_acc, model)
+        stop, improved = early_stopping.check(f1_macro, model)
         if stop:
             logging.getLogger("run_training").info(
                 "Early stopping at epoch {}".format(epoch)
@@ -587,12 +588,14 @@ def run_adapter_token_vit_training_with_mlflow(
     mlflow.log_metric("best_f1_macro", float(best_f1_macro))
 
     # per-class 指標存 artifact（避免 MLflow metric key 爆炸）
+    best_val_per_class_acc_json = {str(k): v for k, v in best_val_per_class_acc.items()}
+    best_f1_per_class_json = {str(k): v for k, v in best_f1_per_class.items()}
     log_json_artifact(
-        {"best_val_per_class_acc": best_val_per_class_acc},
+        {"best_val_per_class_acc": best_val_per_class_acc_json},
         "best_val_per_class_acc.json",
     )
     log_json_artifact(
-        {"best_f1_per_class": best_f1_per_class}, "best_f1_per_class.json"
+        {"best_f1_per_class": best_f1_per_class_json}, "best_f1_per_class.json"
     )
 
     # 6) log model（PyTorch）
