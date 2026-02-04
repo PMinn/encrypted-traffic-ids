@@ -30,3 +30,14 @@ pip install -r requirements.txt
 ```
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
+
+## 設定檔
+新增 `/config.json`
+```json
+{
+    "alias": {
+        "@": "<專案路徑>",
+        "@data": "<資料路徑>"
+    }
+}
+```
