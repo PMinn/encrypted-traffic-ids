@@ -113,6 +113,7 @@ class Adapter_Token_ViT_1D(nn.Module):
         emb_dropout: float = 0.5,
         # ==== Adapter Tokens 參數 ====
         num_flow_tokens: int = 2,  # 產生幾個 adapter tokens（1~2 常見）
+        flow_tokens_infront_of_raw_patches: bool = True,  # adapter tokens 放在 patch 前面或後面
     ):
         super(Adapter_Token_ViT_1D, self).__init__()
         # 考慮不能切分之情形
@@ -173,6 +174,8 @@ class Adapter_Token_ViT_1D(nn.Module):
 
         self.to_cls_token = nn.Identity()
         self.mlp_head = MLPHead(self.dim, num_classes)
+        
+        self.flow_tokens_infront_of_raw_patches = flow_tokens_infront_of_raw_patches
 
     def forward(self, x: Tensor, flow_feat: Tensor) -> tuple[Tensor, Tensor]:
         """
@@ -190,7 +193,11 @@ class Adapter_Token_ViT_1D(nn.Module):
         flow_tokens = self.flow_proj(flow_feat).view(
             batch, self.num_flow_tokens, self.dim
         )  # [B, K, D]
-        x = torch.cat((cls_tokens, flow_tokens, x), dim=1)  # [B, 1+K+N, D]
+        
+        if self.flow_tokens_infront_of_raw_patches:
+            x = torch.cat((cls_tokens, flow_tokens, x), dim=1)  # [B, 1+K+N, D]
+        else:
+            x = torch.cat((cls_tokens, x, flow_tokens), dim=1)  # [B, 1+N+K, D]
 
         # 4) 位置編碼 + dropout
         x = x + self.pos_embedding[:, : (1 + self.num_flow_tokens + n)]

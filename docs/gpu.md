@@ -4,3 +4,8 @@
 ```
 nvidia-smi
 ```
+
+## 查詢CUDA版本
+```
+nvcc --version
+```

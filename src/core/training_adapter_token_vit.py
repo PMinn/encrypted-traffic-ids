@@ -48,7 +48,9 @@ class ConfigDict(TypedDict):
 def run_adapter_token_vit_training(
     config: ConfigDict,
     features: List[str],
+    feature_token_num: int,
     dataset_path: Path,
+    flow_tokens_infront_of_raw_patches: bool = True,  # adapter tokens 放在 patch 前面或後面
     with_mlflow: bool = False,
 ) -> tuple[int, float, float, dict[int, float], dict[int, float], torch.nn.Module]:
     # === 超參數設定 ===
@@ -164,7 +166,8 @@ def run_adapter_token_vit_training(
     val_data = val_data / 255
 
     np.savez(result_folder_path / "normalize.npz", mu=mu, sigma=sigma)
-    log_npz_artifact("normalize.npz", mu=mu, sigma=sigma)
+    if with_mlflow:
+        log_npz_artifact("normalize.npz", mu=mu, sigma=sigma)
 
     train_loader = DataLoader(
         TensorDataset(
@@ -210,6 +213,8 @@ def run_adapter_token_vit_training(
         heads=8,
         mlp_dim=32,
         flow_feat_dim=train_flow_features.shape[1],  # flow 統計特徵維度
+        num_flow_tokens=feature_token_num,  # 產生幾個 adapter tokens
+        flow_tokens_infront_of_raw_patches=flow_tokens_infront_of_raw_patches,  # adapter tokens 放在 patch 前面或後面
     ).to(device)
 
     if torch.cuda.is_available():
@@ -531,8 +536,10 @@ def run_adapter_token_vit_training_with_mlflow(
     run_name: str,
     config: ConfigDict,
     features: list[str],
-    dataset_path: Path,  # 可選：你的訓練資料檔
+    dataset_path: Path,  # 你的訓練資料檔
+    feature_token_num: int = 2,
     feature_registry_version: str | None = None,  # 可選：你自訂的特徵版本
+    flow_tokens_infront_of_raw_patches: bool = True,  # adapter tokens 放在 patch 前面或後面
 ) -> None:
     mlflow.set_experiment(experiment_name)
 
@@ -552,6 +559,12 @@ def run_adapter_token_vit_training_with_mlflow(
             "batch_size": config.get("batch_size", None),
             "lr": config.get("lr", None),
             "epochs": config.get("epochs", None),
+            "patch_size": config.get("patch_size", None),
+            "rl_step": config.get("rl_step", None),
+            "seq_len": config.get("seq_len", None),
+            "task": config.get("task", "classification"),
+            "feature_token_num": feature_token_num,
+            "flow_tokens_infront_of_raw_patches": flow_tokens_infront_of_raw_patches,
         }
     )
 
@@ -579,7 +592,7 @@ def run_adapter_token_vit_training_with_mlflow(
         best_val_per_class_acc,
         best_f1_per_class,
         model,
-    ) = run_adapter_token_vit_training(config, features, dataset_path, with_mlflow=True)
+    ) = run_adapter_token_vit_training(config, features, feature_token_num, dataset_path, flow_tokens_infront_of_raw_patches, with_mlflow=True)
     mlflow.log_metric("train_wall_time_sec", time.time() - t0)
 
     # 5) log metrics（你關心的那些）
