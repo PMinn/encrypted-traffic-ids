@@ -142,21 +142,12 @@ def run_attack_filter(
                     ts_list = attack_dict_type[key]
                     pkt_ts = float(pkt.time)
                     pkt_ts_floor = math.floor(pkt_ts)
-                    pkt_ts_ceil = math.ceil(pkt_ts)
-                    if pkt_ts_floor in ts_list or pkt_ts_ceil in ts_list:
+                    if pkt_ts_floor in ts_list:
                         is_attack = True
                         break
             if is_attack:
                 break
         del pkts
-        # if is_attack:
-        # output_folder = "/".join(output_file.split("/")[:-1])
-        # if not os.path.exists(output_folder):
-        #     os.makedirs(output_folder)
-        # if not os.path.exists(output_file):
-        # logger.info(f"Attack found in {pcap}, saving to {output_file}")
-        # copy_pcap(src_file = pcap, dest_file = output_file)
-        # logger.getChild("run_attack_filter").info(pcap)
     if handle is not None:
         handle(pcap, is_attack)
     return is_attack

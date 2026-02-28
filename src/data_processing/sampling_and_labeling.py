@@ -78,6 +78,11 @@ class LabelingClassesInfo(TypedDict):
 def load_data(
     classes_info: list[SamplingClassesInfo] | list[LabelingClassesInfo],
 ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.int_], dict[str, int]]:
+    for index, class_info in enumerate(classes_info):
+        if "data_path" not in class_info:
+            raise SamplingInfoMissingException(
+                f"Class '{class_info['name']}' is missing 'data_path' in classes_info."
+            )
     x = []
     y: list[int] = []
     data_counts = {}
@@ -109,6 +114,7 @@ def sampling(
             tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]],
         ],
     ] = get_undersampling_by_random,
+    data_path: Path | None = None,
 ) -> None:
     """
     根據指定的採樣數量對各類別進行過採樣或欠採樣
@@ -119,7 +125,15 @@ def sampling(
         None
     """
     save_to.mkdir(parents=True, exist_ok=True)
-    data, label, data_counts = load_data(classes_info)
+    if data_path is None:
+        data, label, data_counts = load_data(classes_info)
+    else:
+        data = np.load(str(data_path / "sampled_data.npy"))
+        label = np.load(str(data_path / "sampled_label.npy"))
+        data_counts = {
+            info["name"]: int(np.sum(label == index)) 
+            for index, info in enumerate(classes_info)
+        }
     counter = []
     under_strategy = {}
     over_strategy = {}
@@ -127,10 +141,6 @@ def sampling(
         if "name" not in class_info:
             raise SamplingInfoMissingException(
                 f"Class info at index {index} is missing 'name' in classes_info."
-            )
-        if "data_path" not in class_info:
-            raise SamplingInfoMissingException(
-                f"Class '{class_info['name']}' is missing 'data_path' in classes_info."
             )
         if "sampling_count" not in class_info:
             raise SamplingInfoMissingException(
