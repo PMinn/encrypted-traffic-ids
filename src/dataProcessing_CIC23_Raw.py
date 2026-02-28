@@ -2,9 +2,10 @@ import glob
 from multiprocessing import Pool
 import os
 from pathlib import Path
+from typing import Tuple
 
 # import shutil
-from data_processing.split_to_flows import split_to_flows_from_folder
+from data_processing.split_to_flows import split_to_flows_from_file
 
 # from data_processing.sampling_TON import suggest, run_sampling, run_binary_sampling
 # from data_processing.save_pcap import save_pcap
@@ -19,55 +20,25 @@ import logging
 from utils.alias import a2p
 
 
-def split_pcap() -> None:
-    # 正常流量 Benign
-    # split_to_flows_from_folder(
-    #     input_dir = "/sdc1/ytlindata/CIC-IoT-2023/CICIoT2023/Benign_Final", # 輸入資料夾路徑
-    #     output_dir = "/sdc1/ytlindata/CIC-IoT-2023/split/Benign/", # 輸出資料夾路徑
-    #     splitCapPath = "/home/YTLIN/ytlin/encrypted_NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
-    #     remove_original = False,
-    #     logger = logger
-    # )
-    # 惡意流量 Malicious
-    attack_folders = a2p("@/data/CIC-IoT-2023/CICIoT2023/")
-    for folder in attack_folders.iterdir():
-        folder_name = folder.name
-        print(f"Processing: {folder_name}")
-        split_to_flows_from_folder(
-            input_dir=folder,  # 輸入資料夾路徑
-            output_dir=a2p(
-                f"@/data/CIC-IoT-2023/split/Malicious/{folder_name}/"
-            ),  # 輸出資料夾路徑
-            remove_original=False,
-        )
+def split_pcap(input_file: Path, output_dir: Path) -> None:
+    split_to_flows_from_file(
+        input_file=input_file,  # 輸入檔案路徑
+        output_dir=output_dir,  # 輸出資料夾路徑
+        remove_original=False,
+    )
 
 
-def filter_encrypted_pcaps() -> None:
-    logger = logging.getLogger("filter_encrypted_pcaps")
-    # 正常流量 Benign
-    # benign_pcaps = glob.glob(os.path.join('/sdc1/ytlindata/CIC-IoT-2023/split/Benign/**', "*.pcap"), recursive = True)
-    # with Pool(50) as pool:
-    #     r = list(tqdm(pool.imap(filter_pcap, benign_pcaps), total=len(benign_pcaps)))
-    # logger.info(f"benign has encrypted pcaps: {sum([1 for res in r if res])} / {len(benign_pcaps)}")
-    # 惡意流量 Malicious
-    malicious_folders = a2p("@/data/CIC-IoT-2023/split/Malicious/")
-    skip_folders: list[str] = []
-    for malicious_folder in malicious_folders.iterdir():
-        folder_name = malicious_folder.name
-        if folder_name in skip_folders:
-            continue
-        logger.debug(f"Processing: {folder_name}")
-        malicious_pcaps = list(malicious_folder.glob("**/*.pcap"))
-        with Pool(50) as pool:
-            r = list(
-                tqdm(
-                    pool.imap(remove_pcap_if_not_encrypted, malicious_pcaps),
-                    total=len(malicious_pcaps),
-                )
+def filter_encrypted_pcaps(input_dir: Path) -> Tuple[int, int]:
+    pcaps = list(input_dir.glob("**/*.pcap"))
+    with Pool(int(os.cpu_count()*0.5)) as pool:
+        r = list(
+            tqdm(
+                pool.imap(remove_pcap_if_not_encrypted, pcaps),
             )
-        logger.info(
-            f"{folder_name} has encrypted pcaps: {sum([1 for res in r if res])} / {len(malicious_pcaps)}"
         )
+    encrypted_pcaps_count = sum([1 for res in r if res])
+    total_pcaps_count = len(pcaps)
+    return encrypted_pcaps_count, total_pcaps_count
 
 
 def count_pcaps(path: str) -> None:
@@ -96,11 +67,38 @@ def count_pcaps(path: str) -> None:
 
 
 def main() -> None:
-    # 分離成 Flows
-    split_pcap()
+    # 正常流量 Benign
+    # split_to_flows_from_folder(
+    #     input_dir = "/sdc1/ytlindata/CIC-IoT-2023/CICIoT2023/Benign_Final", # 輸入資料夾路徑
+    #     output_dir = "/sdc1/ytlindata/CIC-IoT-2023/split/Benign/", # 輸出資料夾路徑
+    #     splitCapPath = "/home/YTLIN/ytlin/encrypted_NIDS/src/data_processing/SplitCap.exe", # SplitCap.exe 的路徑
+    #     remove_original = False,
+    #     logger = logger
+    # )
+    # 正常流量 Benign
+    # benign_pcaps = glob.glob(os.path.join('/sdc1/ytlindata/CIC-IoT-2023/split/Benign/**', "*.pcap"), recursive = True)
+    # with Pool(50) as pool:
+    #     r = list(tqdm(pool.imap(filter_pcap, benign_pcaps), total=len(benign_pcaps)))
+    # logging.info(f"benign has encrypted pcaps: {sum([1 for res in r if res])} / {len(benign_pcaps)}")
+    # 惡意流量 Malicious
+    attack_folders = a2p("@/data/CIC-IoT-2023/CICIoT2023/")
+    for attack_folder in attack_folders.iterdir():
+        encrypted_pcaps_count = total_pcaps_count = 0
+        attack_folder_name = attack_folder.name
+        for index, pcap_file in enumerate(attack_folder.glob("*.pcap")):
+            logging.info(f"Processing folder: {attack_folder_name}, file: {pcap_file.name}")
+            # 分離成 Flows
+            output_dir =  a2p(f"@/data/CIC-IoT-2023/split/Malicious/{attack_folder_name}/split_{index+1}")
+            split_pcap(pcap_file, output_dir)
+            logging.info(f"Finished splitting folder: {attack_folder_name}/{pcap_file.name} -> /{output_dir.name}")
 
-    # 篩選出加密的 pcap
-    # filter_encrypted_pcaps()
+            # 篩選出加密的 pcap
+            temp_encrypted_pcaps_count, temp_total_pcaps_count = filter_encrypted_pcaps(input_dir=output_dir)
+            encrypted_pcaps_count += temp_encrypted_pcaps_count
+            total_pcaps_count += temp_total_pcaps_count
+            logging.info(f"Encrypted pcaps in {attack_folder_name}/{output_dir.name}: {temp_encrypted_pcaps_count} / {temp_total_pcaps_count}")
+            
+        logging.info(f"Total encrypted pcaps in {attack_folder_name}: {encrypted_pcaps_count} / {total_pcaps_count}")
 
     # 計算出各類型的數量
     # count_pcaps('/sdc1/ytlindata/TON_IoT/encrypted_filter')

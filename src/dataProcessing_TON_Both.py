@@ -130,7 +130,7 @@ def filter_encrypted_pcaps() -> None:
 
 def filter_attack() -> None:
     from data_processing.filter_attack import run_attack_filter
-    from data_processing.save_pcap import copy_pcap
+    from data_processing.save_pcap import move_pcap
 
     # CSVs 裡面有紀錄每個 pcap 的攻擊類型
     attack_csvs = a2p("@data/data/TON_IoT/SecurityEvents_Network_datasets").glob(
@@ -156,7 +156,7 @@ def filter_attack() -> None:
                 if not line.strip():
                     continue
                 parts = line.strip().split(",")
-                if len(parts) < 3:
+                if len(parts) < 7: # 數量要是7個
                     continue
                 attack_type = parts[6]
                 if attack_type in skip_attack_types:
@@ -173,10 +173,10 @@ def filter_attack() -> None:
                 if key not in attack_dict[attack_type]:
                     attack_dict[attack_type][key] = []
                 attack_dict[attack_type][key].append(ts)
-    logger.info(f"Total attack records: {len(attack_dict)}")
+    logger.info(f"Total attack Ground Truth records: {len(attack_dict)}")
     for attack_type in attack_dict:
         logger.info(
-            f"Attack type: {attack_type}, records: {len(attack_dict[attack_type])}"
+            f"Attack type: {attack_type}, Ground Truth records: {len(attack_dict[attack_type])}"
         )
     csv_type2pcap_filder_map = {
         "scanning": "normal_scanning",

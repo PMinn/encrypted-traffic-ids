@@ -48,3 +48,15 @@ def pcapng_to_pcap(input_file: Path, output_file: Path) -> None:
         ["tshark", "-F", "pcap", "-r", str(input_file), "-w", str(output_file)],
         check=True,
     )
+
+def move_pcap(src_file: Path, dest_file: Path) -> None:
+    """
+    移動 pcap 檔案到指定位置
+    Args:
+        src_file (Path): 原始的 pcap 檔案路徑
+        dest_file (Path): 目的地的 pcap 檔案路徑
+    Returns:
+        None
+    """
+    dest_file.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(src_file, dest_file)

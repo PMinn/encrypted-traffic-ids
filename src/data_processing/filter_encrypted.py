@@ -43,14 +43,15 @@ def check_encryption(pcap_file: Path) -> bool:
     return has_encrypted
 
 
-def remove_pcap_if_not_encrypted(pcap: Path) -> None:
+def remove_pcap_if_not_encrypted(pcap: Path) -> bool:
     """
     如果 pcap 檔案中不包含加密協議，則刪除該檔案
     Args:
         pcap (Path): pcap 檔案路徑
     Returns:
-        None
+        bool: 是否包含加密協議
     """
     has_encrypted = check_encryption(pcap)
     if not has_encrypted:
         os.remove(pcap)
+    return has_encrypted

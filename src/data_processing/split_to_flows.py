@@ -107,7 +107,7 @@ def split_to_flows_from_file(
     out_dir = output_dir
     # 確保初始資料夾存在
     out_dir.mkdir(parents=True, exist_ok=True)
-    logging.getLogger("split_to_flows.from_file").info(
+    logging.getLogger("split_to_flows.from_file").debug(
         f"Processing {file} into {out_dir}"
     )
     try:
