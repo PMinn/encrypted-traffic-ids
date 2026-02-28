@@ -17,6 +17,12 @@ def fit_normalizer(
     """
     X_log = X.copy().astype(float)
 
+    # 把 inf 變 nan，避免 log(∞) 變成 inf
+    X_log[:, log_idx] = np.where(
+        np.isinf(X_log[:, log_idx]), np.nan, X_log[:, log_idx]
+    )
+    # 把 nan視為 0
+    X_log[:, log_idx] = np.where(np.isnan(X_log[:, log_idx]), 0, X_log[:, log_idx])
     # 避免 log(負數)
     X_log[:, log_idx] = np.clip(X_log[:, log_idx], a_min=0, a_max=None)
 
@@ -52,6 +58,15 @@ def transform_normalizer(
         X_new: np.array, shape = (num_samples, num_features), 正規化後的資料
     """
     X_new = X.copy().astype(float)
+    
+    # 把 inf 變 nan，避免 log(∞) 變成 inf
+    X_new[:, log_idx] = np.where(
+        np.isinf(X_new[:, log_idx]), np.nan, X_new[:, log_idx]
+    )
+    # 把 nan視為 0
+    X_new[:, log_idx] = np.where(np.isnan(X_new[:, log_idx]), 0, X_new[:, log_idx])
+    # 避免 log(負數)
+    X_new[:, log_idx] = np.clip(X_new[:, log_idx], a_min=0, a_max=None)
 
     # 1. 做 log1p
     X_new[:, log_idx] = np.log1p(X_new[:, log_idx])
