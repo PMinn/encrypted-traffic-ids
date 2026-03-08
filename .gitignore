@@ -219,3 +219,6 @@ __marimo__/
 /data*/
 
 config.json
+
+mlruns/
+mlflow.db
