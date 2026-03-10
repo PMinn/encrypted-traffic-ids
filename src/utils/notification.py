@@ -14,6 +14,8 @@ load_dotenv()
 
 configuration = Configuration(access_token=os.environ["LINE_BEARER_TOKEN"])
 
+if os.environ["LINE_BEARER_TOKEN"] is None or os.environ["LINE_USER_UUID"] is None:
+    raise ValueError("LINE_BEARER_TOKEN or LINE_USER_UUID is not set in environment variables.")
 
 def send_push_message(job_name: str, message: str) -> None:
     with ApiClient(configuration) as api_client:

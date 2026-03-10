@@ -5,11 +5,19 @@ from scapy.all import rdpcap, load_layer, PacketList
 from scapy.compat import raw
 import logging
 from tqdm import tqdm
+from data_processing.FlowMeter.extract_flow_features_103 import (
+    extract_flow_features_103,
+    get_feature_names_103,
+)
 from data_processing.FlowMeter.extract_flow_features_73 import (
     extract_flow_features_73,
     get_feature_names_73,
 )
 from pathlib import Path
+
+from data_processing.PacketMeter.extract_packets_features_25 import (
+    extract_packet_pp_features_25,
+)
 
 # Load the TLS layer (requires scapy-ssl_tls extension)
 load_layer("tls")
@@ -75,6 +83,7 @@ def preprocess_flow(IMG_SHAPE: tuple[int, int], pkts: PacketList) -> list[int]:
 def merge_flow_and_raw_features(
     flow_feature_order: list[str],
     flow_features: dict[str, float] | None,
+    packet_features: list[list[float]],
     raw_feature: list[int],
 ) -> list[float]:
     """
@@ -82,7 +91,8 @@ def merge_flow_and_raw_features(
     Args:
         flow_feature_order (list): 流量特徵的順序列表
         flow_features (dict): 流量特徵字典
-        raw_feature (list): 原始特徵列表
+        packet_features (list): 封包級別特徵
+        raw_feature (list): 原始特徵
     Returns:
         list: 合併後的特徵列表
     """
@@ -91,6 +101,8 @@ def merge_flow_and_raw_features(
         feature_vector.append(
             flow_features.get(key, 0.0) if flow_features is not None else 0.0
         )
+    for packet_feature in packet_features:
+        feature_vector.extend(packet_feature)
     feature_vector.extend(raw_feature)
     return feature_vector
 
@@ -111,7 +123,7 @@ def flow_to_features_file(
     Returns:
         list: 提取的特徵列表
     """
-    flow_feature_order = get_feature_names_73()
+    flow_feature_order = get_feature_names_103()
     features_list = []
     for pcapPath in tqdm(flow_pcaps):
         traffic_type = "TCP"
@@ -133,17 +145,20 @@ def flow_to_features_file(
             if not is_labelled(pcapPath, pkts):
                 del pkts
                 continue
-        pkts = get_used_pkt(traffic_type, packet_shape, pkts)
         try:
-            flow_features = extract_flow_features_73(pkts)
+            flow_features = extract_flow_features_103(pkts)
+            mat: list[list[float]] = extract_packet_pp_features_25(
+                pkts, N=packet_shape[1]
+            )
         except Exception as e:
             logger.getChild("flow_to_features_file").warning(
                 f"Error extracting flow features in {pcapPath}: {e}", exc_info=True
             )
             flow_features = None
+        pkts = get_used_pkt(traffic_type, packet_shape, pkts)
         raw_feature = preprocess_flow(packet_shape, pkts)
         merge_features = merge_flow_and_raw_features(
-            flow_feature_order, flow_features, raw_feature
+            flow_feature_order, flow_features, mat, raw_feature
         )
         features_list.append(merge_features)
         del pkts

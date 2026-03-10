@@ -130,7 +130,7 @@ def filter_encrypted_pcaps() -> None:
 
 def filter_attack() -> None:
     from data_processing.filter_attack import run_attack_filter
-    from data_processing.save_pcap import move_pcap
+    from data_processing.save_pcap import move_pcap, copy_pcap
 
     # CSVs 裡面有紀錄每個 pcap 的攻擊類型
     attack_csvs = a2p("@data/data/TON_IoT/SecurityEvents_Network_datasets").glob(
@@ -234,42 +234,51 @@ def filter_attack() -> None:
 
 def get_features() -> None:
     from data_processing.features import flow_to_features_file
-
-    packet_shape = (96, 5)
-    pcaps = a2p("@data/data/TON_IoT/encrypt_aes/Benign").glob("**/*.pcap")
+    packet_shape = (96, 8)
+    pcaps = a2p("@data/data/TON_IoT/attack_filter/Benign/split_1").glob("**/*.pcap")
     flow_to_features_file(
         pcaps,
         output_file=a2p(
-            f"@data/data/TON_IoT/features_aes/features/benign_features_{packet_shape[0]}_{packet_shape[1]}.npy"
+            f"@data/data/TON_IoT/features_sspp/features/benign_features_{packet_shape[0]}_{packet_shape[1]}.npy"
         ),
         packet_shape=packet_shape,
     )
 
-    malicious_folders = a2p("@data/data/TON_IoT/encrypt_aes/Malicious").iterdir()
+    malicious_folders = a2p("@data/data/TON_IoT/attack_filter/Malicious").iterdir()
+    skip_folders: list[Path] = [
+        "MITM",
+        "DoS",
+        "XSS",
+        "password",
+        "backdoor",
+        "ransomware",
+    ]
     for malicious_folder in malicious_folders:
         folder_name = malicious_folder.stem.replace("normal_", "").replace(
             "_normal", ""
         )
+        if folder_name in skip_folders:
+            continue
         pcaps = malicious_folder.glob("**/*.pcap")
         flow_to_features_file(
             pcaps,
             output_file=a2p(
-                f"@data/data/TON_IoT/features_aes/features/{folder_name}_features_{packet_shape[0]}_{packet_shape[1]}.npy"
+                f"@data/data/TON_IoT/features_sspp/features/{folder_name}_features_{packet_shape[0]}_{packet_shape[1]}.npy"
             ),
             packet_shape=packet_shape,
         )
 
 
-def split_features_to_train_test() -> None:
+def split_features_to_train_test(features_folder: str) -> None:
     import json
     import numpy as np
     from sklearn.model_selection import train_test_split
 
-    train_folder = a2p("@data/data/TON_IoT/features_rsa/split/train")
-    test_folder = a2p("@data/data/TON_IoT/features_rsa/split/test")
+    train_folder = a2p(f"@data/data/TON_IoT/{features_folder}/split/train")
+    test_folder = a2p(f"@data/data/TON_IoT/{features_folder}/split/test")
     train_folder.mkdir(parents=True, exist_ok=True)
     test_folder.mkdir(parents=True, exist_ok=True)
-    features_npys = a2p("@data/data/TON_IoT/features_rsa/features").glob("*.npy")
+    features_npys = a2p(f"@data/data/TON_IoT/{features_folder}/features").glob("*.npy")
     result: dict[str, dict[str, int]] = {"train": {}, "test": {}}
     for features_npy in features_npys:
         filename = features_npy.stem
@@ -286,7 +295,7 @@ def split_features_to_train_test() -> None:
             f"{filename}: total={number_of_data}, train={number_of_train_data}, test={number_of_test_data}"
         )
     with open(
-        a2p("@data/data/TON_IoT/features_rsa/split/train_test_split_info.json"),
+        a2p(f"@data/data/TON_IoT/{features_folder}/split/train_test_split_info.json"),
         "w",
     ) as f:
         json.dump(result, f, indent=4)
@@ -672,6 +681,42 @@ def rerun_sampling_labeling_and_split_to_train_test(features_folder) -> None:
             f"@data/data/TON_IoT/{features_folder}/sampled/train"
         )
     )
+    
+def run_labeling() -> None:
+    from data_processing.sampling_and_labeling import labeling
+    for train_or_test in ["train", "test"]:
+        labeling(
+            [
+                {
+                    "name": "Benign",
+                    "data_path": a2p(
+                        f"@data/data/TON_IoT/features_sspp/split/{train_or_test}/benign_features_96_8.npy"
+                    ),
+                },
+                {
+                    "name": "scanning",
+                    "data_path": a2p(
+                        f"@data/data/TON_IoT/features_sspp/split/{train_or_test}/scanning_features_96_8.npy"
+                    ),
+                },
+                {
+                    "name": "DDoS",
+                    "data_path": a2p(
+                        f"@data/data/TON_IoT/features_sspp/split/{train_or_test}/DDoS_features_96_8.npy"
+                    ),
+                },
+                {
+                    "name": "Injection",
+                    "data_path": a2p(
+                        f"@data/data/TON_IoT/features_sspp/split/{train_or_test}/Injection_features_96_8.npy"
+                    ),
+                },
+            ],
+            save_to=a2p(
+                f"@data/data/TON_IoT/features_sspp/sampled_0P/{train_or_test}/"
+            ),
+        )
+    
 def main() -> None:
     # 有些 pcap 切分工具無法讀取，可以用這個步驟重新存檔一次
     # rewrite_pcap()
@@ -722,7 +767,7 @@ def main() -> None:
     # )
 
     # 分割成訓練集與測試集
-    # split_features_to_train_test()
+    # split_features_to_train_test("features_sspp")
 
     # features_folder = "features" | "features_nonMalucusIsBenign"
     # 採樣及標記
@@ -736,7 +781,10 @@ def main() -> None:
     # get_suggestion("features_rsa", 0.3)
     
     # 再次進行採樣、標記與分割訓練集與測試集，這次使用新的建議數量
-    rerun_sampling_labeling_and_split_to_train_test("features_rsa")
+    # rerun_sampling_labeling_and_split_to_train_test("features_rsa")
+    
+    # SSPP 用我們的資料不做過採樣
+    run_labeling()
     return
 
 
