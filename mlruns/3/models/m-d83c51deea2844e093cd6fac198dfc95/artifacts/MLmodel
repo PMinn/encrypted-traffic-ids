@@ -1,0 +1,23 @@
+artifact_path: /home/alanpan/encrypted-NIDS/mlruns/3/models/m-d83c51deea2844e093cd6fac198dfc95/artifacts
+flavors:
+  python_function:
+    config:
+      device: null
+    data: data
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pytorch
+    pickle_module_name: mlflow.pytorch.pickle_module
+    python_version: 3.10.12
+  pytorch:
+    code: null
+    model_data: data
+    pytorch_version: 2.7.1+cu118
+mlflow_version: 3.7.0
+model_id: m-d83c51deea2844e093cd6fac198dfc95
+model_size_bytes: 48229
+model_uuid: m-d83c51deea2844e093cd6fac198dfc95
+prompts: null
+run_id: 4cffcbc394ad452b8c53d0a79319b6fe
+utc_time_created: '2026-03-16 12:26:00.425332'
