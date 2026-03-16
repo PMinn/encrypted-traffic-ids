@@ -44,6 +44,7 @@ encrypted-NIDS/
 ### 模型
  - ViT
  - Swin
+ - SSPP
 
 ### 方式
  - Raw: 內容特徵

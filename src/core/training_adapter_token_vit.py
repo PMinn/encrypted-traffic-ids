@@ -16,6 +16,11 @@ from torch.utils.data import DataLoader, TensorDataset
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
 import matplotlib.pyplot as plt
+from data_processing.FlowMeter.extract_flow_features_103 import (
+    get_feature_names_103,
+    get_log_scale_features_name_103,
+    get_std_scale_features_name_103,
+)
 from data_processing.FlowMeter.extract_flow_features_73 import (
     get_feature_names_73,
     get_log_scale_features_name_73,
@@ -101,10 +106,11 @@ def run_adapter_token_vit_training(
         "\n" + tabulate(table, headers=["Id", "Class Name", "Count"])
     )
 
-    features_name_73 = get_feature_names_73()
+    # features_name_73 = get_feature_names_73()
+    features_name_103 = get_feature_names_103()
 
     keep_features_name = features
-    keep_features_index = [features_name_73.index(feat) for feat in keep_features_name]
+    keep_features_index = [features_name_103.index(feat) for feat in keep_features_name]
     if -1 in keep_features_index:
         missing_feats = [
             keep_features_name[i]
@@ -112,16 +118,16 @@ def run_adapter_token_vit_training(
             if idx == -1
         ]
         logging.getLogger("run_training").error(
-            f"Some required features are missing in features_name_73: {missing_feats}"
+            f"Some required features are missing in features_name_103: {missing_feats}"
         )
         raise ValueError(
-            f"Some required features are missing in features_name_73: {missing_feats}"
+            f"Some required features are missing in features_name_103: {missing_feats}"
         )
     keep_features_index.sort()
-    keep_features_name = [features_name_73[idx] for idx in keep_features_index]
+    keep_features_name = [features_name_103[idx] for idx in keep_features_index]
 
     log_scale_features_name = [
-        feat for feat in get_log_scale_features_name_73() if feat in keep_features_name
+        feat for feat in get_log_scale_features_name_103() if feat in keep_features_name
     ]
     log_idx = [keep_features_name.index(feat) for feat in log_scale_features_name]
     if -1 in log_idx:
@@ -136,7 +142,7 @@ def run_adapter_token_vit_training(
         )
 
     std_scale_features_name = [
-        feat for feat in get_std_scale_features_name_73() if feat in keep_features_name
+        feat for feat in get_std_scale_features_name_103() if feat in keep_features_name
     ]
     z_only_idx = [keep_features_name.index(feat) for feat in std_scale_features_name]
     if -1 in z_only_idx:
@@ -155,14 +161,14 @@ def run_adapter_token_vit_training(
     train_flow_features = transform_normalizer(
         train_flow_features, mu, sigma, log_idx, z_only_idx
     )
-    train_data = train_data[:, 73:]
+    train_data = train_data[:, 103 + 25 * 8 + 96 * 3 : 103 + 25 * 8 + 96 * 3 + SEQ_LEN]
     train_data = train_data / 255
 
     val_flow_features = val_data[:, keep_features_index]
     val_flow_features = transform_normalizer(
         val_flow_features, mu, sigma, log_idx, z_only_idx
     )
-    val_data = val_data[:, 73:]
+    val_data = val_data[:, 103 + 25 * 8 + 96 * 3 : 103 + 25 * 8 + 96 * 3 + SEQ_LEN]
     val_data = val_data / 255
 
     np.savez(result_folder_path / "normalize.npz", mu=mu, sigma=sigma)
@@ -592,7 +598,14 @@ def run_adapter_token_vit_training_with_mlflow(
         best_val_per_class_acc,
         best_f1_per_class,
         model,
-    ) = run_adapter_token_vit_training(config, features, feature_token_num, dataset_path, flow_tokens_infront_of_raw_patches, with_mlflow=True)
+    ) = run_adapter_token_vit_training(
+        config,
+        features,
+        feature_token_num,
+        dataset_path,
+        flow_tokens_infront_of_raw_patches,
+        with_mlflow=True,
+    )
     mlflow.log_metric("train_wall_time_sec", time.time() - t0)
 
     # 5) log metrics（你關心的那些）

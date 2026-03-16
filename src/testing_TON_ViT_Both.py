@@ -6,7 +6,7 @@ from core.testing_adapter_token_vit import run_adapter_token_vit_testing_with_ml
 from utils.alias import a2p
 
 if __name__ == "__main__":
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -30,8 +30,37 @@ if __name__ == "__main__":
 
     logger.getChild("matplotlib").setLevel(logging.WARNING)
 
+    sspp_features_26 = [
+        "Packet Length Mean",
+        "Packet Length Variance",
+        "Min Packet Length",
+        "Total Packet Length",
+        "L4 Length Mean",
+        "L4 Length Variance",
+        "L4 Length Min",
+        "L4 Length Max",
+        "Total L4 Length",
+        "Flow IAT Mean",
+        "Flow IAT Min",
+        "Flow IAT Max",
+        "Flow IAT Total",
+        "Handshake Time",
+        "Flow Duration",
+        "Win Mean",
+        "Win Variance",
+        "Win Min",
+        "Win Max",
+        "Win Total",
+        "RST Flag Count",
+        "PSH Flag Count",
+        "Keep Alive Count",
+        "Keep Alive ACK Count",
+        "SYN Flag Count",
+        "Service",
+    ]
+    
     run_adapter_token_vit_testing_with_mlflow(
-        run_id="8e42464c1fce4844b1e8061ee6f292b3",
+        run_id="7fe68a53ef86412bb665f751730b263a",
         config={
             "model_name": "adapter_token_vit",
             "seed": 42,
@@ -44,31 +73,32 @@ if __name__ == "__main__":
             "seq_len": 480,
             "task": "multi-class classification",
         },
-        features=[
-            "Flow Duration",
-            "Total Fwd Packets",
-            "Total Backward Packets",
-            "Destination Port",
-            "Source Port",
-            "Flow Packets/s",
-            "Flow Bytes/s",
-            "Total Length of Fwd Packets",
-            "Total Length of Bwd Packets",
-            "Fwd Packet Length Mean",
-            "Bwd Packet Length Mean",
-            "Max Packet Length",
-            "Min Packet Length",
-            "Packet Length Std",
-            "SYN Flag Count",
-            "ACK Flag Count",
-            "Protocol",
-            "Fwd IAT Mean",
-            "Bwd IAT Mean",
-            "Fwd IAT Max",
-            "Fwd IAT Std",
-            "Bwd IAT Max",
-            "Avg Fwd Segment Size",
-            "Avg Bwd Segment Size",
-        ],
-        dataset_path=a2p("@/data/TON_IoT/features/sampled_10P/test/sampled_data.npy"),
+        features=sspp_features_26,
+        # features=[
+        #     "Flow Duration",
+        #     "Total Fwd Packets",
+        #     "Total Backward Packets",
+        #     "Destination Port",
+        #     "Source Port",
+        #     "Flow Packets/s",
+        #     "Flow Bytes/s",
+        #     "Total Length of Fwd Packets",
+        #     "Total Length of Bwd Packets",
+        #     "Fwd Packet Length Mean",
+        #     "Bwd Packet Length Mean",
+        #     "Max Packet Length",
+        #     "Min Packet Length",
+        #     "Packet Length Std",
+        #     "SYN Flag Count",
+        #     "ACK Flag Count",
+        #     "Protocol",
+        #     "Fwd IAT Mean",
+        #     "Bwd IAT Mean",
+        #     "Fwd IAT Max",
+        #     "Fwd IAT Std",
+        #     "Bwd IAT Max",
+        #     "Avg Fwd Segment Size",
+        #     "Avg Bwd Segment Size",
+        # ],
+        dataset_path=a2p("@/data_inner/TON_IoT/features_sspp/sampled_100P/test/sampled_data.npy"),
     )

@@ -11,6 +11,11 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import f1_score, precision_score, recall_score
 import logging
+from data_processing.FlowMeter.extract_flow_features_103 import (
+    get_feature_names_103,
+    get_log_scale_features_name_103,
+    get_std_scale_features_name_103,
+)
 from data_processing.FlowMeter.extract_flow_features_73 import (
     get_feature_names_73,
     get_log_scale_features_name_73,
@@ -40,7 +45,7 @@ class ConfigDict(TypedDict):
 def per_class_metrics(
     test_label: npt.NDArray[np.int_],
     all_preds: npt.NDArray[np.int_],
-    class_names: list[int],
+    class_names: list[str],
 ) -> tuple[str, list[dict[str, float]]]:
     """
     test_label: 1D array-like, 真實標籤
@@ -128,6 +133,8 @@ def run_eval(
     RL_STEP = config["rl_step"]
     SEQ_LEN = config["seq_len"]
 
+    N = 8
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # === 讀取資料 ===
@@ -141,10 +148,11 @@ def run_eval(
 
     test_label = label
 
-    features_name_73 = get_feature_names_73()
+    # features_name_73 = get_feature_names_73()
+    features_name_103 = get_feature_names_103()
 
     keep_features_name = features
-    keep_features_index = [features_name_73.index(feat) for feat in keep_features_name]
+    keep_features_index = [features_name_103.index(feat) for feat in keep_features_name]
     if -1 in keep_features_index:
         missing_feats = [
             keep_features_name[i]
@@ -152,16 +160,16 @@ def run_eval(
             if idx == -1
         ]
         logging.getLogger("run_eval").error(
-            f"Some required features are missing in features_name_73: {missing_feats}"
+            f"Some required features are missing in features_name_103: {missing_feats}"
         )
         raise ValueError(
-            f"Some required features are missing in features_name_73: {missing_feats}"
+            f"Some required features are missing in features_name_103: {missing_feats}"
         )
     keep_features_index.sort()
-    keep_features_name = [features_name_73[idx] for idx in keep_features_index]
+    keep_features_name = [features_name_103[idx] for idx in keep_features_index]
 
     log_scale_features_name = [
-        feat for feat in get_log_scale_features_name_73() if feat in keep_features_name
+        feat for feat in get_log_scale_features_name_103() if feat in keep_features_name
     ]
     log_idx = [keep_features_name.index(feat) for feat in log_scale_features_name]
     if -1 in log_idx:
@@ -176,7 +184,7 @@ def run_eval(
         )
 
     std_scale_features_name = [
-        feat for feat in get_std_scale_features_name_73() if feat in keep_features_name
+        feat for feat in get_std_scale_features_name_103() if feat in keep_features_name
     ]
     z_only_idx = [keep_features_name.index(feat) for feat in std_scale_features_name]
     if -1 in z_only_idx:
@@ -214,7 +222,7 @@ def run_eval(
     test_flow_features = transform_normalizer(
         test_flow_features, normalize["mu"], normalize["sigma"], log_idx, z_only_idx
     )
-    test_data = data[:, 73:]
+    test_data = data[:, 103 + 25 * 8 + 96 * 3 : 103 + 25 * 8 + 96 * 3 + SEQ_LEN]
     test_data = test_data / 255
 
     test_loader = DataLoader(
@@ -234,6 +242,7 @@ def run_eval(
         model = mlflow.pytorch.load_model(
             f"runs:/{mlflow_run_id}/model", map_location=device
         )
+        logging.getLogger("run_eval").info(f"Model loaded from MLflow run_id: {mlflow_run_id}")
     else:
         raise ValueError("Either model_path or mlflow_run_id must be provided.")
 
@@ -253,13 +262,28 @@ def run_eval(
     all_preds = np.array(all_preds_list)
     # === 計算評估指標 ===
     accuracy = np.mean(all_preds == test_label)
-    f1 = f1_score(test_label, all_preds, average="weighted")
-    precision = precision_score(test_label, all_preds, average="weighted")
-    recall = recall_score(test_label, all_preds, average="weighted")
+    f1_macro = f1_score(test_label, all_preds, average="macro")
+    f1_micro = f1_score(test_label, all_preds, average="micro")
+    f1_weighted = f1_score(test_label, all_preds, average="weighted")
+    precision_macro = precision_score(test_label, all_preds, average="macro")
+    precision_micro = precision_score(test_label, all_preds, average="micro")
+    precision_weighted = precision_score(test_label, all_preds, average="weighted")
+    recall_macro = recall_score(test_label, all_preds, average="macro")
+    recall_micro = recall_score(test_label, all_preds, average="micro")
+    recall_weighted = recall_score(test_label, all_preds, average="weighted")
+
     logging.getLogger("run_eval").info(f"Accuracy: {accuracy:.4f}")
-    logging.getLogger("run_eval").info(f"F1 Score: {f1:.4f}")
-    logging.getLogger("run_eval").info(f"Precision: {precision:.4f}")
-    logging.getLogger("run_eval").info(f"Recall: {recall:.4f}")
+    logging.getLogger("run_eval").info(f"F1 Score (Macro): {f1_macro:.4f}")
+    logging.getLogger("run_eval").info(f"F1 Score (Micro): {f1_micro:.4f}")
+    logging.getLogger("run_eval").info(f"F1 Score (Weighted): {f1_weighted:.4f}")
+    logging.getLogger("run_eval").info(f"Precision (Macro): {precision_macro:.4f}")
+    logging.getLogger("run_eval").info(f"Precision (Micro): {precision_micro:.4f}")
+    logging.getLogger("run_eval").info(
+        f"Precision (Weighted): {precision_weighted:.4f}"
+    )
+    logging.getLogger("run_eval").info(f"Recall (Macro): {recall_macro:.4f}")
+    logging.getLogger("run_eval").info(f"Recall (Micro): {recall_micro:.4f}")
+    logging.getLogger("run_eval").info(f"Recall (Weighted): {recall_weighted:.4f}")
     # 計算每個類別的評估指標
     table_str, metrics_list = per_class_metrics(
         test_label=test_label, all_preds=all_preds, class_names=classes
@@ -269,9 +293,15 @@ def run_eval(
         import mlflow
 
         mlflow.log_metric("test_accuracy", accuracy)
-        mlflow.log_metric("test_f1_score", float(f1))
-        mlflow.log_metric("test_precision", float(precision))
-        mlflow.log_metric("test_recall", float(recall))
+        mlflow.log_metric("test_f1_macro", float(f1_macro))
+        mlflow.log_metric("test_f1_micro", float(f1_micro))
+        mlflow.log_metric("test_f1_weighted", float(f1_weighted))
+        mlflow.log_metric("test_precision_macro", float(precision_macro))
+        mlflow.log_metric("test_precision_micro", float(precision_micro))
+        mlflow.log_metric("test_precision_weighted", float(precision_weighted))
+        mlflow.log_metric("test_recall_macro", float(recall_macro))
+        mlflow.log_metric("test_recall_micro", float(recall_micro))
+        mlflow.log_metric("test_recall_weighted", float(recall_weighted))
         log_json_artifact(cast(JSONObject, metrics_list), "test_per_class_metrics.json")
 
 

@@ -1,3 +1,4 @@
+from typing import Optional, cast
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
 from scapy.packet import Packet
@@ -8,27 +9,27 @@ import math
 ACK, SYN, FIN, RST = 0x10, 0x02, 0x01, 0x04
 
 
-def get_ip(pkt):
+def get_ip(pkt: Packet) -> Optional[TCP]:
     if IP in pkt:
-        return pkt[IP]
+        return cast(TCP, pkt[IP])
     if IPv6 in pkt:
-        return pkt[IPv6]
+        return cast(TCP, pkt[IPv6])
     return None
 
 
-def get_4_tuple(ip, tcp):
+def get_4_tuple(ip: Packet, tcp: TCP) -> tuple[str, int, str, int]:
     return (ip.src, tcp.sport, ip.dst, tcp.dport)
 
 
-def tcp_payload_len(tcp):
+def tcp_payload_len(tcp: TCP) -> int:
     return len(bytes(tcp.payload)) if tcp.payload else 0
 
 
-def list_to_4_tuple(k):
+def list_to_4_tuple(k: tuple[str, int, str, int]) -> tuple[str, int, str, int]:
     return (k[2], k[3], k[0], k[1])
 
 
-def is_three_way_handshake(pkts: PacketList) -> tuple[bool, int, int]:
+def is_three_way_handshake(pkts: PacketList) -> tuple[bool, float, int]:
     """
     Args:
         - pkts: PacketList，至少要有 3 個 TCP 封包才有可能是握手
@@ -58,7 +59,7 @@ def is_three_way_handshake(pkts: PacketList) -> tuple[bool, int, int]:
     t1, t2, t3 = p1[TCP], p2[TCP], p3[TCP]
 
     # helper: flags check
-    def has(t, flag):
+    def has(t: TCP, flag: int) -> bool:
         return (int(t.flags) & flag) != 0
 
     # 1) SYN: SYN=1, ACK=0
@@ -85,14 +86,16 @@ def is_three_way_handshake(pkts: PacketList) -> tuple[bool, int, int]:
     # payload 通常為 0（但少數情況握手後立刻 piggyback data，不強制）
     cond3 = cond3_dir and cond3_flags and cond3_ack and (tcp_payload_len(t3) == 0)
 
-    ok = cond1 and cond2 and cond2_ack and cond3
+    ok = bool(cond1 and cond2 and cond2_ack and cond3)
 
     time = float(p3.time) - float(p1.time)
 
-    return (ok, time if ok else 0, start_tcp_index_after_handshake if ok else 0)
+    return (ok, time if ok else 0.0, start_tcp_index_after_handshake if ok else 0)
 
 
-def count_keepalive_and_ack(pkts: PacketList, ack_timeout_s: float = 2.0):
+def count_keepalive_and_ack(
+    pkts: PacketList, ack_timeout_s: float = 2.0
+) -> tuple[int, int]:
     """
     Returns (keepalive_probes_count, keepalive_ack_count)
 
@@ -109,7 +112,7 @@ def count_keepalive_and_ack(pkts: PacketList, ack_timeout_s: float = 2.0):
       - arrives within ack_timeout_s after the probe
     """
     last_seq = {}  # dir_key -> last observed seq (best-effort baseline)
-    pending_ack = (
+    pending_ack: dict[tuple[str, int, str, int], tuple[int, float]] = (
         {}
     )  # dir_key_expected (reverse dir) -> (expected_ack_value, expire_time)
 
@@ -770,10 +773,35 @@ def get_feature_names_103() -> list[str]:
 
 
 def get_log_scale_features_name_103() -> list[str]:
-    return [
-    ]
+    return []
 
 
 def get_std_scale_features_name_103() -> list[str]:
     return [
+        "Packet Length Mean",
+        "Packet Length Variance",
+        "Min Packet Length",
+        "Total Packet Length",
+        "L4 Length Mean",
+        "L4 Length Variance",
+        "L4 Length Min",
+        "L4 Length Max",
+        "Total L4 Length",
+        "Flow IAT Mean",
+        "Flow IAT Min",
+        "Flow IAT Max",
+        "Flow IAT Total",
+        "Handshake Time",
+        "Flow Duration",
+        "Win Mean",
+        "Win Variance",
+        "Win Min",
+        "Win Max",
+        "Win Total",
+        "RST Flag Count",
+        "PSH Flag Count",
+        "Keep Alive Count",
+        "Keep Alive ACK Count",
+        "SYN Flag Count",
+        "Service",
     ]
