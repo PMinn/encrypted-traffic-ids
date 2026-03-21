@@ -66,7 +66,7 @@ if __name__ == "__main__":
     (result_folder_path / "pt").mkdir(parents=True, exist_ok=True)
 
     train_data, val_data, train_label, val_label = train_test_split(
-        data, label, test_size=0.1, stratify=label, random_state=42
+        data, label, test_size=0.2, stratify=label, random_state=42
     )  # 分訓練/驗證
     logging.getLogger("run_training").info("-" * 25 + " train data " + "-" * 25)
     table = []
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         "Keep Alive Count",
         "Keep Alive ACK Count",
         "SYN Flag Count",
-        "Service",
+        # "Service",
     ]
     features_26_index = [feature_names_103.index(f) for f in features_26]
     features_26_index.sort()
@@ -133,7 +133,8 @@ if __name__ == "__main__":
         seed=42,
         num_classes=num_classes,
         num_packets=N,
-        ss_dim=26,
+        ss_dim=25,
+        # ss_dim=26,
         pp_dim=25,
     )
 
@@ -148,7 +149,7 @@ if __name__ == "__main__":
         val_y=torch.from_numpy(val_y).type(torch.long),
         mlflow_config={
             "experiment_name": "TON_IoT",
-            "run_name": f"SSPP Multi-class Classification SSPP26Features",
+            "run_name": f"SSPP Multi-class Classification SSPP26FeaturesRemoveService",
         },
     )
     mlflow.log_metric("train_wall_time_sec", time.time() - t0)

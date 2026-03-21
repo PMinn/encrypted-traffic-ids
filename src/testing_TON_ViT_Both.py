@@ -60,7 +60,7 @@ if __name__ == "__main__":
     ]
     
     run_adapter_token_vit_testing_with_mlflow(
-        run_id="7fe68a53ef86412bb665f751730b263a",
+        run_id="c5e25f27f63a41cab32043fce612b30f",
         config={
             "model_name": "adapter_token_vit",
             "seed": 42,
@@ -97,8 +97,8 @@ if __name__ == "__main__":
         #     "Fwd IAT Max",
         #     "Fwd IAT Std",
         #     "Bwd IAT Max",
-        #     "Avg Fwd Segment Size",
-        #     "Avg Bwd Segment Size",
+        #     "Fwd Packet Length Mean",
+        #     "Bwd Packet Length Mean",
         # ],
-        dataset_path=a2p("@/data_inner/TON_IoT/features_sspp/sampled_100P/test/sampled_data.npy"),
+        dataset_path=a2p("@/data_inner/TON_IoT/features_sspp/sampled_70P/test/sampled_data.npy"),
     )

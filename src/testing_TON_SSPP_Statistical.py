@@ -93,7 +93,7 @@ if __name__ == "__main__":
         "Keep Alive Count",
         "Keep Alive ACK Count",
         "SYN Flag Count",
-        "Service",
+        # "Service",
     ]
     features_26_index = [feature_names_103.index(f) for f in features_26]
     features_26_index.sort()
@@ -106,7 +106,8 @@ if __name__ == "__main__":
         seed=42,
         num_classes=num_classes,
         num_packets=N,
-        ss_dim=26,
+        ss_dim=25,
+        # ss_dim=26,
         pp_dim=25,
     )
 
@@ -117,7 +118,7 @@ if __name__ == "__main__":
         val_pp=torch.from_numpy(val_pp).type(torch.float64),
         val_y=torch.from_numpy(val_y).type(torch.float64),
         mlflow_config={
-            "run_id": "843574778c984c968f67519c5245f6a5",
+            "run_id": "d4c7893bd9524e2ea4d20ff29a189081",
         },
     )
     mlflow.end_run()
