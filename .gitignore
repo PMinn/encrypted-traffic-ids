@@ -216,6 +216,15 @@ __marimo__/
 .streamlit/secrets.toml
 
 *_env
-/data*/
+/data/
+# /data/CIC-IoT-2023/
+# /data/TON_IoT/split/
+# /data/TON_IoT/result/
+# /data/TON_IoT/*filter*/
+# /data_inner/
+/data_inner/check_data/
+/data_inner/TON_IoT/split/
+/data_inner/TON_IoT/result/
+/data_inner/TON_IoT/*filter*/
 
 config.json

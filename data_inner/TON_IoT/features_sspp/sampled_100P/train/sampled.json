@@ -1,0 +1,20 @@
+{
+    "classes": [
+        "benign",
+        "scanning",
+        "DDoS",
+        "Injection"
+    ],
+    "before_sampling": {
+        "benign": 971,
+        "scanning": 13606,
+        "DDoS": 52269,
+        "Injection": 15954
+    },
+    "after_sampling": {
+        "benign": 14783,
+        "scanning": 14786,
+        "DDoS": 14780,
+        "Injection": 14780
+    }
+}

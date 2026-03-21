@@ -1,0 +1,14 @@
+{
+    "classes": [
+        "Benign",
+        "scanning",
+        "DDoS",
+        "Injection"
+    ],
+    "counts": {
+        "Benign": 971,
+        "scanning": 13606,
+        "DDoS": 52269,
+        "Injection": 15954
+    }
+}

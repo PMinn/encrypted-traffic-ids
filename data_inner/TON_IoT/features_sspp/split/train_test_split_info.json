@@ -1,0 +1,14 @@
+{
+    "train": {
+        "benign_features_96_8": 971,
+        "scanning_features_96_8": 13606,
+        "Injection_features_96_8": 15954,
+        "DDoS_features_96_8": 52269
+    },
+    "test": {
+        "benign_features_96_8": 243,
+        "scanning_features_96_8": 3402,
+        "Injection_features_96_8": 3989,
+        "DDoS_features_96_8": 13068
+    }
+}

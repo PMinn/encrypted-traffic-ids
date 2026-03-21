@@ -1,0 +1,15 @@
+{
+    "alpha": 1,
+    "number_before_sampling": {
+        "benign": 971,
+        "DDoS": 52269,
+        "Injection": 15954,
+        "scanning": 13606
+    },
+    "number_of_samples_suggested": {
+        "benign": 14780,
+        "DDoS": 14780,
+        "Injection": 14780,
+        "scanning": 14780
+    }
+}
