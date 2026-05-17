@@ -1,0 +1,82 @@
+[
+  {
+    "class": "benign",
+    "accuracy": 0.9683333333333334,
+    "f1": 0.9608070117413594,
+    "precision": 0.9533967837216935,
+    "recall": 0.9683333333333334,
+    "support": 3000
+  },
+  {
+    "class": "scanning",
+    "accuracy": 0.707,
+    "f1": 0.7960217676862451,
+    "precision": 0.9106912838127952,
+    "recall": 0.707,
+    "support": 3000
+  },
+  {
+    "class": "DDoS",
+    "accuracy": 0.9493333333333334,
+    "f1": 0.9231766612641815,
+    "precision": 0.898422712933754,
+    "recall": 0.9493333333333334,
+    "support": 3000
+  },
+  {
+    "class": "Injection",
+    "accuracy": 0.891,
+    "f1": 0.8942790230846437,
+    "precision": 0.8975822699798522,
+    "recall": 0.891,
+    "support": 3000
+  },
+  {
+    "class": "runsomware",
+    "accuracy": 0.0,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "support": 728
+  },
+  {
+    "class": "backdoor",
+    "accuracy": 0.9868656716417911,
+    "f1": 0.8122850122850123,
+    "precision": 0.6901878914405011,
+    "recall": 0.9868656716417911,
+    "support": 1675
+  },
+  {
+    "class": "MITM",
+    "accuracy": 0.0,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "support": 105
+  },
+  {
+    "class": "XSS",
+    "accuracy": 0.9976666666666667,
+    "f1": 0.9912237125351879,
+    "precision": 0.9848634419216847,
+    "recall": 0.9976666666666667,
+    "support": 3000
+  },
+  {
+    "class": "DoS",
+    "accuracy": 0.9986666666666667,
+    "f1": 0.9953488372093023,
+    "precision": 0.9920529801324504,
+    "recall": 0.9986666666666667,
+    "support": 3000
+  },
+  {
+    "class": "password",
+    "accuracy": 0.965,
+    "f1": 0.886676875957121,
+    "precision": 0.8201133144475921,
+    "recall": 0.965,
+    "support": 3000
+  }
+]

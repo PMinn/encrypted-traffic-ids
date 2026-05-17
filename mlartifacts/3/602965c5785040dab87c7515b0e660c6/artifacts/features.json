@@ -1,0 +1,29 @@
+{
+  "features": [
+    "Packet Length Mean",
+    "Packet Length Variance",
+    "Min Packet Length",
+    "Total Packet Length",
+    "L4 Length Mean",
+    "L4 Length Variance",
+    "L4 Length Min",
+    "L4 Length Max",
+    "Total L4 Length",
+    "Flow IAT Mean",
+    "Flow IAT Min",
+    "Flow IAT Max",
+    "Flow IAT Total",
+    "Handshake Time",
+    "Flow Duration",
+    "Win Mean",
+    "Win Variance",
+    "Win Min",
+    "Win Max",
+    "Win Total",
+    "RST Flag Count",
+    "PSH Flag Count",
+    "Keep Alive Count",
+    "Keep Alive ACK Count",
+    "SYN Flag Count"
+  ]
+}
