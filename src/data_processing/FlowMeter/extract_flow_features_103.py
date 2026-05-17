@@ -20,10 +20,47 @@ def get_ip(pkt: Packet) -> Optional[TCP]:
 def get_4_tuple(ip: Packet, tcp: TCP) -> tuple[str, int, str, int]:
     return (ip.src, tcp.sport, ip.dst, tcp.dport)
 
+def tcp_payload_len(pkt):
+    if TCP not in pkt:
+        return 0
+    tcp = pkt[TCP]
+    # TCP header length: dataofs 是 32-bit words，所以要 * 4
+    tcp_header_len = tcp.dataofs * 4 if tcp.dataofs else 20
+    if IP in pkt:
+        ip_total_len = pkt[IP].len
+        ip_header_len = pkt[IP].ihl * 4
+        return max(0, ip_total_len - ip_header_len - tcp_header_len)
+    elif IPv6 in pkt:
+        # IPv6 plen 是 IPv6 payload length，包含 TCP header + TCP payload
+        ipv6_payload_len = pkt[IPv6].plen
+        return max(0, ipv6_payload_len - tcp_header_len)
+    return 0
 
-def tcp_payload_len(tcp: TCP) -> int:
-    return len(bytes(tcp.payload)) if tcp.payload else 0
-
+def get_l4_payload_len(pkt):
+    if TCP in pkt:
+        tcp = pkt[TCP]
+        tcp_header_len = tcp.dataofs * 4 if tcp.dataofs else 20
+        if IP in pkt:
+            ip_total_len = pkt[IP].len
+            ip_header_len = pkt[IP].ihl * 4
+            return max(0, ip_total_len - ip_header_len - tcp_header_len)
+        if IPv6 in pkt:
+            ipv6_payload_len = pkt[IPv6].plen
+            return max(0, ipv6_payload_len - tcp_header_len)
+        return 0
+    if UDP in pkt:
+        udp = pkt[UDP]
+        # UDP len 包含 UDP header 8 bytes
+        if udp.len is not None:
+            return max(0, udp.len - 8)
+        if IP in pkt:
+            ip_total_len = pkt[IP].len
+            ip_header_len = pkt[IP].ihl * 4
+            return max(0, ip_total_len - ip_header_len - 8)
+        if IPv6 in pkt:
+            return max(0, pkt[IPv6].plen - 8)
+        return 0
+    return 0
 
 def list_to_4_tuple(k: tuple[str, int, str, int]) -> tuple[str, int, str, int]:
     return (k[2], k[3], k[0], k[1])
@@ -84,7 +121,7 @@ def is_three_way_handshake(pkts: PacketList) -> tuple[bool, float, int]:
     cond3_ack = t3.ack == ((t2.seq + 1) & 0xFFFFFFFF)
 
     # payload 通常為 0（但少數情況握手後立刻 piggyback data，不強制）
-    cond3 = cond3_dir and cond3_flags and cond3_ack and (tcp_payload_len(t3) == 0)
+    cond3 = cond3_dir and cond3_flags and cond3_ack and (tcp_payload_len(p3) == 0)
 
     ok = bool(cond1 and cond2 and cond2_ack and cond3)
 
@@ -137,7 +174,7 @@ def count_keepalive_and_ack(
             for kk in expired:
                 pending_ack.pop(kk, None)
 
-        payload_len = tcp_payload_len(tcp)
+        payload_len = tcp_payload_len(pkt)
 
         # 檢查是否為 keep-alive ACK（先做，避免後面更新 last_seq 干擾）
         if (flags & ACK) and not (flags & (SYN | FIN | RST)) and payload_len == 0:
@@ -254,15 +291,15 @@ class FlowStats:
         l4 = pkt[TCP] if TCP in pkt else (pkt[UDP] if UDP in pkt else None)
 
         self.all_pkt_len.append(length)
-        self.all_l4_len.append(len(l4.payload) if l4 else 0)
+        self.all_l4_len.append(get_l4_payload_len(pkt))
 
         if direction == "fwd":
             self.fwd_pkt_len.append(length)
-            self.fwd_l4_len.append(len(l4.payload) if l4 else 0)
+            self.fwd_l4_len.append(get_l4_payload_len(pkt))
             self.fwd_times.append(ts)
         else:
             self.bwd_pkt_len.append(length)
-            self.bwd_l4_len.append(len(l4.payload) if l4 else 0)
+            self.bwd_l4_len.append(get_l4_payload_len(pkt))
             self.bwd_times.append(ts)
 
         # TCP flags / window / segment size

@@ -17,8 +17,21 @@ def get_ip(pkt: Packet):
     return None
 
 
-def tcp_payload_len(tcp: TCP) -> int:
-    return len(bytes(tcp.payload)) if tcp.payload else 0
+def tcp_payload_len(pkt):
+    if TCP not in pkt:
+        return 0
+    tcp = pkt[TCP]
+    # TCP header length: dataofs 是 32-bit words，所以要 * 4
+    tcp_header_len = tcp.dataofs * 4 if tcp.dataofs else 20
+    if IP in pkt:
+        ip_total_len = pkt[IP].len
+        ip_header_len = pkt[IP].ihl * 4
+        return max(0, ip_total_len - ip_header_len - tcp_header_len)
+    elif IPv6 in pkt:
+        # IPv6 plen 是 IPv6 payload length，包含 TCP header + TCP payload
+        ipv6_payload_len = pkt[IPv6].plen
+        return max(0, ipv6_payload_len - tcp_header_len)
+    return 0
 
 
 def list_to_4_tuple(k):
