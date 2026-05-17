@@ -62,44 +62,47 @@ def split_pcap() -> None:
     )
 
     # # 正常流量 Benign
-    # split_to_flows_from_folder(
-    #     input_dir=a2p("@data/data/TON_IoT/rewrite_dataset/normal_pcaps/"),  # 輸入資料夾路徑
-    #     output_dir=a2p("@data/data/TON_IoT/split/Benign/"),  # 輸出資料夾路徑
-    # )
-    # # 惡意流量 Malicious
-    # attack_folders = a2p("@data/data/TON_IoT/rewrite_dataset/normal_attack_pcaps").iterdir()
-    # for folder in attack_folders:
-    #     folder_name = folder.name
-    #     split_to_flows_from_folder(
-    #         input_dir=folder,  # 輸入資料夾路徑
-    #         output_dir=a2p(
-    #             f"@data/data/TON_IoT/split/Malicious/{folder_name}/"
-    #         ),  # 輸出資料夾路徑
-    #     )
-    # 意外修正
-    split_to_flows_from_file(
-        input_file=a2p(
-            "@data/data/TON_IoT/rewrite_dataset/normal_attack_pcaps/normal_scanning/normal_scanning3.pcap"
+    split_to_flows_from_folder(
+        input_dir=a2p(
+            "@data/data/TON_IoT/rewrite_dataset/rewrite_dataset/normal_pcaps/"
         ),  # 輸入資料夾路徑
-        output_dir=a2p(
-            "@data/data/TON_IoT/split/Malicious/normal_scanning/split_3"
-        ),  # 輸出資料夾路徑
+        output_dir=a2p("@data/data/TON_IoT/split/Benign/"),  # 輸出資料夾路徑
     )
+    # # 惡意流量 Malicious
+    attack_folders = a2p(
+        "@data/data/TON_IoT/rewrite_dataset/rewrite_dataset/normal_attack_pcaps"
+    ).iterdir()
+    for folder in attack_folders:
+        folder_name = folder.name
+        split_to_flows_from_folder(
+            input_dir=folder,  # 輸入資料夾路徑
+            output_dir=a2p(
+                f"@data/data/TON_IoT/split/Malicious/{folder_name}/"
+            ),  # 輸出資料夾路徑
+        )
+    # 意外修正
+    # split_to_flows_from_file(
+    #     input_file=a2p(
+    #         "@data/data/TON_IoT/rewrite_dataset/normal_attack_pcaps/normal_scanning/normal_scanning3.pcap"
+    #     ),  # 輸入資料夾路徑
+    #     output_dir=a2p(
+    #         "@data/data/TON_IoT/split/Malicious/normal_scanning/split_3"
+    #     ),  # 輸出資料夾路徑
+    # )
 
 
 def filter_encrypted_pcaps() -> None:
     from data_processing.filter_encrypted import remove_pcap_if_not_encrypted
 
     # 正常流量 Benign
-    benign_pcaps = a2p("@data/data/TON_IoT/split/Benign").glob("**/*.pcap")
-    with Pool(50) as pool:
-        r = list(
-            tqdm(
-                pool.imap(remove_pcap_if_not_encrypted, benign_pcaps),
-                total=len(cast(list[Path], benign_pcaps)),
-            )
-        )
-    logging.getLogger("filter_encrypted_pcaps").info(r)
+    # benign_pcaps = a2p("@data/data/TON_IoT/split/Benign").glob("**/*.pcap")
+    # with Pool(50) as pool:
+    #     r = list(
+    #         tqdm(
+    #             pool.imap(remove_pcap_if_not_encrypted, benign_pcaps),
+    #         )
+    #     )
+    # logging.getLogger("filter_encrypted_pcaps").info(r)
     # 惡意流量 Malicious
     malicious_folders = a2p("@data/data/TON_IoT/split/Malicious").iterdir()
     skip_folders: list[Path] = []
@@ -120,7 +123,6 @@ def filter_encrypted_pcaps() -> None:
             r = list(
                 tqdm(
                     pool.imap(remove_pcap_if_not_encrypted, malicious_pcaps),
-                    total=len(cast(list[Path], malicious_pcaps)),
                 )
             )
         logging.getLogger("filter_encrypted_pcaps").info(
@@ -156,7 +158,7 @@ def filter_attack() -> None:
                 if not line.strip():
                     continue
                 parts = line.strip().split(",")
-                if len(parts) < 7: # 數量要是7個
+                if len(parts) < 7:  # 數量要是7個
                     continue
                 attack_type = parts[6]
                 if attack_type in skip_attack_types:
@@ -234,6 +236,7 @@ def filter_attack() -> None:
 
 def get_features() -> None:
     from data_processing.features import flow_to_features_file
+
     packet_shape = (96, 8)
     pcaps = a2p("@data/data/TON_IoT/attack_filter/Benign/split_1").glob("**/*.pcap")
     flow_to_features_file(
@@ -320,18 +323,18 @@ def run_sampling_and_labeling(features_folder: str, alpha: float) -> None:
     sampling(
         [
             {
-                "name": "Benign",
+                "name": "benign",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/train/benign_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/train/benign_features_96_8.npy"
                 ),
                 "sampling_count": sampling_suggestion["number_of_samples_suggested"][
-                    "Benign"
+                    "benign"
                 ],
             },
             {
                 "name": "scanning",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/train/scanning_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/train/scanning_features_96_8.npy"
                 ),
                 "sampling_count": sampling_suggestion["number_of_samples_suggested"][
                     "scanning"
@@ -340,7 +343,7 @@ def run_sampling_and_labeling(features_folder: str, alpha: float) -> None:
             {
                 "name": "DDoS",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/train/DDoS_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/train/DDoS_features_96_8.npy"
                 ),
                 "sampling_count": sampling_suggestion["number_of_samples_suggested"][
                     "DDoS"
@@ -349,7 +352,7 @@ def run_sampling_and_labeling(features_folder: str, alpha: float) -> None:
             {
                 "name": "Injection",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/train/Injection_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/train/Injection_features_96_8.npy"
                 ),
                 "sampling_count": sampling_suggestion["number_of_samples_suggested"][
                     "Injection"
@@ -367,25 +370,25 @@ def run_sampling_and_labeling(features_folder: str, alpha: float) -> None:
             {
                 "name": "Benign",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/test/benign_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/test/benign_features_96_8.npy"
                 ),
             },
             {
                 "name": "scanning",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/test/scanning_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/test/scanning_features_96_8.npy"
                 ),
             },
             {
                 "name": "DDoS",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/test/DDoS_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/test/DDoS_features_96_8.npy"
                 ),
             },
             {
                 "name": "Injection",
                 "data_path": a2p(
-                    f"@data/data/TON_IoT/{features_folder}/split/test/Injection_features_96_5_73.npy"
+                    f"@data/data/TON_IoT/{features_folder}/split/test/Injection_features_96_8.npy"
                 ),
             },
         ],
@@ -400,16 +403,20 @@ def get_suggestion(features_folder: str, alpha: float) -> None:
 
     suggester(
         {
-            "benign": 27000,
-            "scanning": 27000,
-            "DDoS": 27000,
-            "Injection": 27000,
-            "runsomware": 1699,
-            "backdoor": 15076,
-            "MITM": 246,
-            "XSS": 27000,
-            "DoS": 27000,
-            "password": 27000,
+            # "benign": 27000,
+            # "scanning": 27000,
+            # "DDoS": 27000,
+            # "Injection": 27000,
+            # "runsomware": 1699,
+            # "backdoor": 15076,
+            # "MITM": 246,
+            # "XSS": 27000,
+            # "DoS": 27000,
+            # "password": 27000,
+            "benign": 971,
+            "DDoS": 52269,
+            "Injection": 15954,
+            "scanning": 13606,
         },
         alpha=alpha,
         json_path=a2p(
@@ -517,7 +524,7 @@ def encrypt_aes_pcap() -> None:
                     continue
                 encrypt_pcap(in_pcap=pcap, out_pcap=output_file)
 
-    
+
 def run_sampling_labeling_and_split_to_train_test(features_folder) -> None:
     import shutil
     import json
@@ -580,9 +587,7 @@ def run_sampling_labeling_and_split_to_train_test(features_folder) -> None:
             }
             for key, value in number_of_data.items()
         ],
-        save_to=a2p(
-            f"@data/data/TON_IoT/{features_folder}/sampled/mix/"
-        )
+        save_to=a2p(f"@data/data/TON_IoT/{features_folder}/sampled/mix/"),
     )
 
     with open(
@@ -631,9 +636,7 @@ def run_sampling_labeling_and_split_to_train_test(features_folder) -> None:
         allow_pickle=False,
     )
     np.save(
-        a2p(
-            f"@data/data/TON_IoT/{features_folder}/sampled/train/sampled_label.npy"
-        ),
+        a2p(f"@data/data/TON_IoT/{features_folder}/sampled/train/sampled_label.npy"),
         train_labels,
         allow_pickle=False,
     )
@@ -658,14 +661,19 @@ def run_sampling_labeling_and_split_to_train_test(features_folder) -> None:
                 ]
                 for class_index, class_name in enumerate(classes)
             ],
-            headers=["Class", "Number of Train Samples", "Number of Test Samples"]
+            headers=["Class", "Number of Train Samples", "Number of Test Samples"],
         )
     )
-    shutil.copyfile(str(a2p(f"@data/data/TON_IoT/{features_folder}/sampled/mix/sampled.json")), str(a2p(f"@data/data/TON_IoT/{features_folder}/sampled/train/sampled.json")))
+    shutil.copyfile(
+        str(a2p(f"@data/data/TON_IoT/{features_folder}/sampled/mix/sampled.json")),
+        str(a2p(f"@data/data/TON_IoT/{features_folder}/sampled/train/sampled.json")),
+    )
+
 
 def rerun_sampling_labeling_and_split_to_train_test(features_folder) -> None:
     from data_processing.sampling_and_labeling import sampling
     import json
+
     target_folder = a2p(f"@data/data/TON_IoT/{features_folder}/sampled_70P")
     suggestion = json.load(open(target_folder / "sampling_suggestion.json", "r"))
     sampling(
@@ -677,13 +685,13 @@ def rerun_sampling_labeling_and_split_to_train_test(features_folder) -> None:
             for key, value in suggestion["number_of_samples_suggested"].items()
         ],
         save_to=(target_folder / "train"),
-        data_path=a2p(
-            f"@data/data/TON_IoT/{features_folder}/sampled/train"
-        )
+        data_path=a2p(f"@data/data/TON_IoT/{features_folder}/sampled/train"),
     )
-    
+
+
 def run_labeling() -> None:
     from data_processing.sampling_and_labeling import labeling
+
     for train_or_test in ["train", "test"]:
         labeling(
             [
@@ -716,7 +724,46 @@ def run_labeling() -> None:
                 f"@data/data/TON_IoT/features_sspp/sampled_0P/{train_or_test}/"
             ),
         )
-    
+
+
+def get_encrypted_pcaps_info() -> None:
+    from data_processing.filter_encrypted import check_encrypted_type
+    import json
+
+    target_folder = a2p("@data/data/TON_IoT/encrypted_pcaps_info")
+    target_folder.mkdir(parents=True, exist_ok=True)
+    # 正常流量 Benign
+    # benign_pcaps = a2p("@data/data/TON_IoT/attack_filter/Benign/split_1").glob("**/*.pcap")
+    # with Pool(50) as pool:
+    #     r = list(
+    #         tqdm(
+    #             pool.imap(check_encrypted_type, benign_pcaps),
+    #         )
+    #     )
+    # logging.getLogger("filter_encrypted_pcaps").info("Finished processing Benign pcaps")
+    # with open(target_folder / "benign_pcaps_info.json", "w") as f:
+    #     json.dump(r, f)
+    # 惡意流量 Malicious
+    malicious_folders = [
+        a2p("@data/data/TON_IoT/attack_filter/Malicious") / "normal_DDoS"
+    ]
+    for malicious_folder in malicious_folders:
+        logging.getLogger("filter_encrypted_pcaps").info(
+            f"Processing folder: {malicious_folder}"
+        )
+        folder_name = malicious_folder.name
+        malicious_pcaps = malicious_folder.glob("**/*.pcap")
+        data = []
+        for pcap in malicious_pcaps:
+            name_and_reault = check_encrypted_type(pcap)
+            data.append(name_and_reault)
+        logging.getLogger("filter_encrypted_pcaps").info(
+            f"Finished processing folder: {folder_name}"
+        )
+        with open(target_folder / f"{folder_name}_pcaps_info.json", "w") as f:
+            json.dump(data, f)
+
+
 def main() -> None:
     # 有些 pcap 切分工具無法讀取，可以用這個步驟重新存檔一次
     # rewrite_pcap()
@@ -730,6 +777,8 @@ def main() -> None:
 
     # 篩選出加密的 pcap
     # filter_encrypted_pcaps()
+
+    get_encrypted_pcaps_info()
 
     # 計算出各類型的數量
     # count_pcaps(a2p("@data/data/TON_IoT/split/"))
@@ -771,20 +820,21 @@ def main() -> None:
 
     # features_folder = "features" | "features_nonMalucusIsBenign"
     # 採樣及標記
-    # run_sampling_and_labeling("features_fixed_time", 0.1)
+    # get_suggestion("features_sspp", 1)
+    # run_sampling_and_labeling("features_sspp", 1)
 
     # 同時進行採樣、標記與分割訓練集與測試集(SSPP 那篇用的流程)
     # run_sampling_labeling_and_split_to_train_test("features_aes")
-    
+
     # features_folder = "features" | "features_nonMalucusIsBenign"
     # 建議採樣數量
-    # get_suggestion("features_rsa", 0.3)
-    
+    # get_suggestion("features_sspp", 1)
+
     # 再次進行採樣、標記與分割訓練集與測試集，這次使用新的建議數量
-    # rerun_sampling_labeling_and_split_to_train_test("features_rsa")
-    
+    # rerun_sampling_labeling_and_split_to_train_test("features_sspp")
+
     # SSPP 用我們的資料不做過採樣
-    run_labeling()
+    # run_labeling()
     return
 
 
