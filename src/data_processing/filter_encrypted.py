@@ -55,3 +55,20 @@ def remove_pcap_if_not_encrypted(pcap: Path) -> bool:
     if not has_encrypted:
         os.remove(pcap)
     return has_encrypted
+
+def check_encrypted_type(pcap_file: Path) -> dict:
+    find_protocol = None
+    for protocol in ENCRYPTED_PROTOCOLS:
+        try:
+            cap = pyshark.FileCapture(
+                str(pcap_file), display_filter=protocol, keep_packets=False
+            )  # 只讀出被 Wireshark 判定為 TLS 的封包
+            for _ in cap:
+                find_protocol = protocol
+        except Exception as e:
+            logging.getLogger("filter_encrypted.check_encrypted_type").error(
+                f"Error closing {pcap_file}: {e}", exc_info=True
+            )
+        if find_protocol is not None:
+            break
+    return (pcap_file.name, find_protocol)

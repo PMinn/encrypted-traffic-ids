@@ -434,6 +434,8 @@ class FlowStats:
         )
         l4_len_max, l4_len_min, l4_len_mean, l4_len_std = safe_stats(self.all_l4_len)
         win_max, win_min, win_mean, win_std = safe_stats(self.win)
+        fwd_win_max, fwd_win_min, fwd_win_mean, fwd_win_std = safe_stats(self.win_fwd)
+        bwd_win_max, bwd_win_min, bwd_win_mean, bwd_win_std = safe_stats(self.win_bwd)
 
         feat = {
             # Flow basic
@@ -558,6 +560,18 @@ class FlowStats:
             "Win Mean": win_mean,
             "Win Std": win_std,
             "Win Variance": win_std**2 if win_std else 0,
+            "Fwd Win Total": sum(self.win_fwd),
+            "Fwd Win Mean": fwd_win_mean,
+            "Fwd Win Std": fwd_win_std,
+            "Fwd Win Variance": fwd_win_std**2 if fwd_win_std else 0,
+            "Fwd Win Min": fwd_win_min,
+            "Fwd Win Max": fwd_win_max,
+            "Bwd Win Total": sum(self.win_bwd),
+            "Bwd Win Mean": bwd_win_mean,
+            "Bwd Win Std": bwd_win_std,
+            "Bwd Win Variance": bwd_win_std**2 if bwd_win_std else 0,
+            "Bwd Win Min": bwd_win_min,
+            "Bwd Win Max": bwd_win_max,
             #   keep alive
             "Keep Alive Count": self.keep_alive,
             "Keep Alive ACK Count": self.keep_alive_ack,
